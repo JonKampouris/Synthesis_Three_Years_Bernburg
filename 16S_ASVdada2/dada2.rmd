@@ -1,0 +1,284 @@
+---
+title: "Farming practices 3 YEARS"
+author: "Ioannis D. Kampouris"
+date: "2024-17-2"
+output: pdf_document
+---
+
+
+
+#############################################################
+Code in Bash Shell
+#############################################################
+#!/bin/bash
+#Author: Ioannis Kampouris
+#Purpose: Use fastqc and multiqc in the R Server (UBUNTU OS)
+#Dependencies a path for fastqc and 
+# Attention: To download multiQC you need to have a git clone with pip3 install .
+
+export PATH=$PATH:"/home/ioannis.kampouris/fastqc/FastQC" 
+#Change accordingly to your path 
+export PATH=$PATH:"/home/ioannis.kampouris/fastqc/MultiQC" 
+#Change accordingly to your path 
+
+find -name  "*raw_1*"|sed 's/^..//'  > sample_list.txt 
+#Change accordingly to your path 
+
+mkdir QC
+filename='sample_list.txt'
+echo Start
+while read i;
+   do 
+   SAMPLE=$(echo ${i} | sed "s/raw_1\.fq\.gz//")
+      echo "$SAMPLE"
+   fastqc  ${SAMPLE}raw_2.fq.gz -o QC #You can remove the 
+   #"RAW" if you want your files with NOVOGENE cleaning
+    fastqc  ${SAMPLE}raw_1.fq.gz -o QC
+     
+done <"$filename"
+ 
+ mkdir QC/FW
+ mkdir QC/RE
+
+mv QC/*raw_1* QC/FW
+mv QC/*raw_2* QC/RE
+cd QC/FW
+python3 -m multiqc  .
+cd ..
+cd ..
+cd QC/RE
+python3 -m multiqc  .
+
+After I run the fastqc/multiqc I plotted the results of average quality per read
+##########################################################################
+```{r, fig.height=10, fig.width=10}
+library(readr)
+library(tidyverse)
+library(ggplot2)
+
+set.seed(12122019)
+```
+
+#Start dada2 for the 2020 samples
+```{r, fig.height=10, fig.width=10}
+library(dada2)
+source("mod_loess_function.R")
+
+path_2020 <-paste0( "2020/trimmed_cutadapt")
+# CHANGE ME to the directory containing your demultiplexed fastq files
+filtpathF_2020 <- file.path(path_2020, "FW_filtered") 
+# Filtered forward files go into the pathF/filtered/ subdirectory
+filtpathR_2020 <- file.path(path_2020, "RE_filtered") 
+fastqFs_2020 <- sort(list.files(path_2020, pattern="_1.fq"))
+fastqRs_2020 <- sort(list.files(path_2020, pattern="_2.fq"))
+# Filtering
+out_2020<-filterAndTrim(fwd=file.path(path_2020, fastqFs_2020), filt=file.path(filtpathF_2020, fastqFs_2020),
+              rev=file.path(path_2020, fastqRs_2020), 
+              filt.rev=file.path(filtpathR_2020, fastqRs_2020),
+               maxEE=c(2,2), rm.phix=TRUE, matchIDs = T,
+            compress=TRUE, verbose=TRUE, multithread=TRUE)
+
+```
+
+Lowest output ~75.9%
+```{r, fig.height=10, fig.width=10}
+filtFs_2020 <- list.files(filtpathF_2020, pattern="fq", full.names = TRUE)
+filtRs_2020 <- list.files(filtpathR_2020, pattern="fq", full.names = TRUE)
+sample.names_2020 <- sapply(strsplit(basename(filtFs_2020), "_"), 
+                            `[`, 1) # Assumes filename = samplename_XXX.fastq.gz
+sample.namesR_2020 <- sapply(strsplit(basename(filtRs_2020), "_"), `[`, 1) 
+# Assumes filename = samplename_XXX.fastq.gz
+if(!identical(sample.names_2020, sample.namesR_2020)) stop("Forward and reverse files do not match.")else{"Proceed with Safety"}
+names(filtFs_2020) <- sample.names_2020
+names(filtRs_2020) <- sample.names_2020
+
+
+errF_2020 <- learnErrors(filtFs_2020, nbases=1e8,
+errorEstimationFunction = loessErrfun_mod1,multithread=TRUE)
+errR_2020 <- learnErrors(filtRs_2020, nbases=1e8,
+errorEstimationFunction = loessErrfun_mod1,multithread=TRUE)
+plotErrors(errF_2020, nominalQ=TRUE)
+plotErrors(errR_2020, nominalQ=TRUE)
+```
+
+```{r}
+#Denoise Reads
+ddF_2020 <- dada(filtFs_2020, err=errF_2020, multithread=10)
+ddR_2020 <- dada(filtRs_2020, err=errR_2020, multithread=10)
+```
+```{r}
+mergers_2020 <- mergePairs(ddF_2020, filtFs_2020, 
+ddR_2020, filtRs_2020, minOverlap=7)
+```
+```{r}
+# Construct sequence table and remove chimeras
+seqtab_2020 <- makeSequenceTable(mergers_2020)
+```
+#Start dada2 for the 2021 samples
+```{r, fig.height=10, fig.width=10}
+path_2021 <-paste0( "2021/trimmed_cutadapt")
+# CHANGE ME to the directory containing your demultiplexed fastq files
+filtpathF_2021 <- file.path(path_2021, "FW_filtered") 
+# Filtered forward files go into the pathF/filtered/ subdirectory
+filtpathR_2021 <- file.path(path_2021, "RE_filtered") 
+fastqFs_2021 <- sort(list.files(path_2021, pattern="_1.fq"))
+fastqRs_2021 <- sort(list.files(path_2021, pattern="_2.fq"))
+# Filtering
+out_2021<-filterAndTrim(fwd=file.path(path_2021, fastqFs_2021), filt=file.path(filtpathF_2021, fastqFs_2021),
+              rev=file.path(path_2021, fastqRs_2021),
+              filt.rev=file.path(filtpathR_2021, fastqRs_2021),
+               maxEE=c(2,2), rm.phix=TRUE, matchIDs = T,
+              compress=TRUE, verbose=TRUE, multithread=10)
+
+```
+
+Lowest output ~75.9%
+```{r, fig.height=10, fig.width=10}
+filtFs_2021 <- list.files(filtpathF_2021, pattern="fq", full.names = TRUE)
+filtRs_2021 <- list.files(filtpathR_2021, pattern="fq", full.names = TRUE)
+sample.names_2021 <- sapply(strsplit(basename(filtFs_2021), "_"), `[`, 1) # Assumes filename = samplename_XXX.fastq.gz
+sample.namesR_2021 <- sapply(strsplit(basename(filtRs_2021), "_"), `[`, 1) # Assumes filename = samplename_XXX.fastq.gz
+if(!identical(sample.names_2021, sample.namesR_2021)) stop("Forward and reverse files do not match.")else{"Proceed with Safety"}
+names(filtFs_2021) <- sample.names_2021
+names(filtRs_2021) <- sample.names_2021
+
+
+errF_2021 <- learnErrors(filtFs_2021,errorEstimationFunction = loessErrfun_mod1,
+                         nbases=1e8, multithread=10)
+errR_2021 <- learnErrors(filtRs_2021,
+                         errorEstimationFunction = loessErrfun_mod1,
+                         nbases=1e8, multithread=10)
+plotErrors(errF_2021, nominalQ=TRUE)
+plotErrors(errR_2021, nominalQ=TRUE)
+```
+
+```{r}
+#Denoise Reads
+ddF_2021 <- dada(filtFs_2021, err=errF_2021, multithread=10)
+ddR_2021 <- dada(filtRs_2021, err=errR_2021, multithread=10)
+```
+```{r}
+mergers_2021 <- mergePairs(ddF_2021, filtFs_2021, 
+ddR_2021, filtRs_2021, minOverlap=7)
+```
+```{r}
+# Construct sequence table and remove chimeras
+seqtab_2021 <- makeSequenceTable(mergers_2021)
+```
+
+#Start dada2 for the 2019 samples
+```{r, fig.height=10, fig.width=10}
+path_2019 <-paste0( "2019/trimmed_cutadapt")
+# CHANGE ME to the directory containing your demultiplexed fastq files
+filtpathF_2019 <- file.path(path_2019, "FW_filtered") 
+# Filtered forward files go into the pathF/filtered/ subdirectory
+filtpathR_2019 <- file.path(path_2019, "RE_filtered") 
+fastqFs_2019 <- sort(list.files(path_2019, pattern="_1.fq"))
+fastqRs_2019 <- sort(list.files(path_2019, pattern="_2.fq"))
+# Filtering
+out_2019<-filterAndTrim(fwd=file.path(path_2019, fastqFs_2019), filt=file.path(filtpathF_2019, fastqFs_2019),
+              rev=file.path(path_2019, fastqRs_2019), filt.rev=file.path(filtpathR_2019, fastqRs_2019),
+               maxEE=c(2,2), rm.phix=TRUE, matchIDs = T,
+              compress=TRUE, verbose=TRUE, multithread=10)
+
+```
+
+```{r, fig.height=10, fig.width=10}
+filtFs_2019 <- list.files(filtpathF_2019, pattern="fq", full.names = TRUE)
+filtRs_2019 <- list.files(filtpathR_2019, pattern="fq", full.names = TRUE)
+sample.names_2019 <- sapply(strsplit(basename(filtFs_2019), "_"),
+                            `[`, 1) # Assumes filename = samplename_XXX.fastq.gz
+sample.namesR_2019 <- sapply(strsplit(basename(filtRs_2019), "_"),
+                             `[`, 1) # Assumes filename = samplename_XXX.fastq.gz
+if(!identical(sample.names_2019, sample.namesR_2019))
+  stop("Forward and reverse files do not match.")else{"Proceed with Safety"}
+names(filtFs_2019) <- sample.names_2019
+names(filtRs_2019) <- sample.names_2019
+
+
+errF_2019 <- learnErrors(filtFs_2019,errorEstimationFunction = loessErrfun_mod1,
+                         nbases=1e8, multithread=10)
+errR_2019 <- learnErrors(filtRs_2019, nbases=1e8,
+errorEstimationFunction = loessErrfun_mod1,multithread=10)
+plotErrors(errF_2019, nominalQ=TRUE)
+plotErrors(errR_2019, nominalQ=TRUE)
+```
+
+```{r}
+#Denoise Reads
+ddF_2019 <- dada(filtFs_2019, err=errF_2019, multithread=10)
+ddR_2019 <- dada(filtRs_2019, err=errR_2019, multithread=10)
+```
+```{r}
+mergers_2019 <- mergePairs(ddF_2019, filtFs_2019, 
+ddR_2019, filtRs_2019, minOverlap=7)
+```
+
+```{r}
+# Construct sequence table and remove chimeras
+seqtab_2019 <- makeSequenceTable(mergers_2019)
+```
+
+
+```{r,ig.height=10, fig.width=10}
+st.three_years <- mergeSequenceTables(seqtab_2020, seqtab_2021,seqtab_2019)
+table(nchar(getSequences(st.three_years)))
+distribution_sequences=data.frame(D=(nchar(getSequences(st.three_years))))
+distribution_sequences_plot=ggplot(distribution_sequences, aes(x=D))+geom_bar(stat = "count")
+ggplot(distribution_sequences, aes(x=D))+geom_density(stat = "count")
+
+write.csv(distribution_sequences, 
+          "16S_ASVdada2/three_years_read_size_distribution.csv")
+#402 until 432
+seqtab2 <- st.three_years[,nchar(colnames(st.three_years)) %in% 386:444]
+seqtab3 <- removeBimeraDenovo(seqtab2, method="consensus", multithread=10)
+```
+
+
+```{r}
+ASVtable=as.data.frame(t(seqtab3))%>%rownames_to_column(var="Sequence")
+taxa <- assignTaxonomy(seqtab3, 
+"~/silva_naive/silva_nr99_v138.1_train_set.fa.gz", minBoot = 80, outputBootstraps = T,  multithread=10)
+
+complete_ASV_table= full_join(as.data.frame(taxa)%>%rownames_to_column(var = "Sequence"), ASVtable, by="Sequence")
+complete_ASV_table$ASV=paste0("ASV", rownames(complete_ASV_table))
+
+
+complete_ASV_table = complete_ASV_table%>%
+  filter(tax.Kingdom=="Bacteria"&tax.Order!="Chloroplast"&tax.Family!="Mitochondria")
+ASV_counts=as.data.frame( rowSums(complete_ASV_table[,14:ncol(complete_ASV_table)]%>%column_to_rownames(var="ASV")))
+
+complete_ASV_table2 = complete_ASV_table%>%
+  filter(tax.Kingdom=="Bacteria")
+complete_ASV_table_cleaned2=complete_ASV_table2
+
+
+getN <- function(x) sum(getUniques(x))
+track_all_three <- cbind(rbind(out_2020,out_2021,out_2019), 
+ rbind(sapply(ddF_2020, getN)%>%as.data.frame() ,sapply(ddF_2021, getN)%>%as.data.frame(),sapply(ddF_2019, getN)%>%as.data.frame()), 
+rbind( sapply(ddR_2020, getN)%>%as.data.frame(), sapply(ddR_2021, getN)%>%as.data.frame(), sapply(ddR_2019, getN)%>%as.data.frame()), rbind(sapply(mergers_2020, getN)%>%as.data.frame(), sapply(mergers_2021, getN)%>%as.data.frame(),sapply(mergers_2019, getN)%>%as.data.frame()), rowSums(seqtab2),rowSums(seqtab3), colSums(complete_ASV_table[,14:(ncol(complete_ASV_table)-1)]), colSums(complete_ASV_table2[,14:(ncol(complete_ASV_table)-1)]))
+
+  
+colnames(track_all_three)<-c("In", "Out","Denoised FW","Denoised RE"
+                             , "Merged","Sizeout", "Chimera Filtered",
+                             "Final_Clean_Of_Rare_Seq_and_Plastids", "Archea_out")
+write.csv(complete_ASV_table_cleaned2,"16S_ASVdada2/16S_ASV_Table_LTE_three_years.csv")
+
+write.csv(track_all_three, file = "16S_ASVdada2/track_sequence_number.csv")
+writeFasta<-function(data, filename){
+  fastaLines = c()
+  for (rowNum in 1:nrow(data)){
+    fastaLines = c(fastaLines, 
+as.character(paste(">", data[rowNum,"ASV"], sep = "")))
+fastaLines = c(fastaLines,as.character(data[rowNum,"Sequence"]))
+  }
+  
+  fileConn<-file(filename)
+  writeLines(fastaLines, fileConn)
+  close(fileConn)
+}
+
+writeFasta(complete_ASV_table_cleaned2%>%select(ASV, Sequence), "16S_ASVdada2/ASVs_LTE_three_years.fa")
+``` 
+```{r}
+```

@@ -1,0 +1,197 @@
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(plyr)
+library(dplyr)
+library(readr)
+library(readxl)
+library(ggpubr)
+library(stringi)
+library(tidyr)
+library(reshape2)
+library(vegan)
+library(parallel)
+library(lme4)
+library(ggtext)
+```
+
+Upload the nutrient table
+```{r}
+nutrients1=read.csv(file.path("../InputData", "soil_lab.csv"), check.names=F)
+```
+
+Change the names of the variable accordingly 
+```{r}
+nutrients1$TILLAGE2=nutrients1$Tillage
+nutrients1$FERTILIZATION2=nutrients1$Fertilization
+nutrients1$TILLAGE2=ifelse(nutrients1$TILLAGE2 == "Cultivator", 0, 1)
+nutrients1$FERTILIZATION2=ifelse(nutrients1$FERTILIZATION2 == "extensive", 0, 1)
+```
+
+```{r}
+rownames(nutrients1)=paste0(nutrients1$TILLAGE2,"_",
+                             nutrients1$FERTILIZATION2,"_",
+                             nutrients1$Block,"_",
+                             nutrients1$Experimental_Year)
+nutrients1=as.data.frame(nutrients1)
+nutrients2=nutrients1[rownames(nutrients1),6:21, drop=F]
+nutrients2=as.data.frame(apply(nutrients2, 2, function(x) replace(x, is.na(x), mean(x, na.rm = TRUE))))
+nutrients2=(nutrients2)
+nutrients1[rownames(nutrients1),6:21]=nutrients2
+nutrients3=gather(nutrients1,
+  -c(colnames(nutrients1[rownames(nutrients1),
+  c(1:5, 22:ncol(nutrients1))])),
+  key ="Nutrient",
+  value = "Variable")
+
+nutrients4= nutrients3 %>% filter(Nutrient %in% c("N[%]", "OM[%]"))
+
+```
+
+Create the mixed effect model function
+```{r}
+mixed_effects=list()
+for(i in unique(paste0(nutrients4$Nutrient))){
+  file1=dplyr::filter(nutrients4, Nutrient==paste0(i)) 
+  file1$G=paste0(file1$Fertilization,";",file1$Tillage)
+  file1$Experimental_Year=as.factor(file1$Experimental_Year)
+  file1$Variable=scale(file1$Variable)
+  file2=lme4::lmer(Variable~TILLAGE2*FERTILIZATION2+(1|Experimental_Year), data=file1)
+#Apply Bootstrap for inferring p-values and 95% CI
+boot.out = bootMer(file2, fixef, seed=11122022, nsim=10000, parallel = "multicore", ncpus = 20) 
+print("Boot  finished")
+
+  
+CI.lower = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.025, na.rm=TRUE)))
+CI.upper = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.975, na.rm=TRUE)))
+                                                      
+file3=as.data.frame( summary(boot.out))
+p = rbind(
+  (1-apply(boot.out$t<0, 2, mean))*2,
+  (1-apply(boot.out$t>0, 2, mean))*2)
+pvalues=data.frame(pval= apply(p, 2, min))
+file4=cbind(file3, pvalues, lower=CI.lower, upper=CI.upper)
+
+file5=rownames_to_column(file4, var="Variable")%>%
+mutate(., Nutrient=paste0(i))
+
+
+mixed_effects=rbind(mixed_effects,file5)
+}
+
+mixed_effects2=filter(mixed_effects, Variable!="(Intercept)")
+
+mixed_effects2$pval[mixed_effects2$pval<0.05]="*p* < 0.05"
+mixed_effects2$pval[mixed_effects2$pval!="*p* < 0.05"]="*p* > 0.05"
+```
+
+Create the proper labels for the graph.
+```{r}
+mixed_effects2$Nutrient=factor(
+  mixed_effects2$Nutrient,
+  levels = c("OM[%]","N[%]"),
+  labels = c( expression(paste("SOM (%)")),
+              expression(paste("N (%)"))
+              ))
+
+mixed_effects2$Variable=gsub("TILLAGE2:FERTILIZATION2",
+  "Interaction",mixed_effects3$Variable)
+
+mixed_effects2$Variable=gsub("FERTILIZATION2",
+  "Ext. vs Int. N-Fert.",
+  gsub("TILLAGE2", "CT vs MP Tillage", mixed_effects3$Variable)
+)
+
+mixed_effects2$Variable=factor(mixed_effects3$Variable,
+levels = c ("Interaction",   "Ext. vs Int. N-Fert." , "CT vs MP Tillage"              
+))
+
+plot2 =ggplot(mixed_effects2, 
+  aes(y=Variable, x=bootMed, fill=pval)) +
+  geom_pointrange(shape=21, size=3, aes(xmax=upper, xmin= lower)) +
+  facet_wrap(~Nutrient, scales="fixed", ncol=1, labeller=label_parsed) +
+  scale_fill_manual(values = c("#f1a340","#f7f7f7"), name="p-value") +
+  theme_bw() +
+  ylab("") +
+  xlab("LMM: β1-Coef.± 95%CI") +
+  theme(strip.background=element_rect(fill="white",colour="black")) +
+  theme(strip.text=element_text(size=25,colour="black")) +
+  
+  theme(axis.text.y=element_text(size=25,colour="black")) +
+  theme(axis.text.x=element_text(size=25,colour="black")) +
+  theme(axis.title.x=element_text(size=25,colour="black")) +
+  
+  theme(legend.text=element_text(size=25,colour="black")) + 
+  theme(legend.title=element_text(size=25,colour="black")) + 
+  theme(legend.position="top",axis.title.y=element_text(size=25,colour="black")) + 
+  theme(legend.key.size=unit(2,"cm")) +
+  theme(legend.text=element_markdown()) +
+  
+  geom_vline(xintercept=0, linetype=2) +
+  xlim(-2, 2)
+
+```
+
+Plot the Soil and Nitrogen concentrations.
+```{r}
+
+nutrients4$Tillage=gsub("Cultivator",
+  "CT",
+  gsub("Plough", "MP", nutrients4$Tillage)
+)
+nutrients4$Fertilization=gsub("extensive",
+  "Ext.",
+  gsub("intensive", "Int.", nutrients4$Fertilization)
+)
+
+
+nutrients4$Nutrient=factor(
+  nutrients4$Nutrient,
+  levels = c("OM[%]","N[%]"),
+  labels = c( expression(paste("SOM (%)")),
+              expression(paste("N (%)"))
+              ))
+plot1= ggplot(nutrients4, 
+  aes(x=as.factor(Experimental_Year), y=Variable, fill=paste0(Tillage,"-",Fertilization))) +
+  geom_boxplot() +
+  facet_wrap(~Nutrient, strip.position = "left", scales = "free", labeller=label_parsed) +
+  scale_alpha_manual(values = c(1, 0.1), name="N. Fert.: ") +
+  scale_fill_manual(values = c("#c8e9df","#4ab795", "#fdb79c",  "#fb6328"), name="") +
+  theme_bw() +
+  ylab("") +
+  xlab("") +
+  theme(strip.background=element_rect(fill="white", colour="white"), strip.placement = "outside") +
+  theme(strip.text=element_text(size=25,colour="black")) +
+  
+  theme(axis.text.x=element_text(size=25,colour="black")) +
+  theme(axis.text.y=element_text(size=25,colour="black")) +
+  theme(axis.title.x=element_text(size=25,colour="black")) +
+  
+  theme(legend.text=element_text(size=25,colour="black")) + 
+  theme(legend.title=element_text(size=25,colour="black")) + 
+  theme(legend.position="top",axis.title.y=element_text(size=25,colour="black")) + 
+  theme(legend.key.size=unit(2,"cm")) +
+
+  guides(alpha = guide_legend(override.aes = list(fill="black")))
+```
+
+Save the image
+```{r}
+png(filename = "Fig1_SoilLab.png",
+    width = 8000, 
+    height = 3000, 
+    res=300)
+print(ggarrange(plot1, plot2,
+                labels = c("A)","B)"),
+                font.label = list(size = 24)))
+dev.off()
+
+```
+Save the rest of the data as SI table.
+```{r}
+write.csv(file = file.path("../OutputData", "TableS2_SoilLab.csv"), filter(mixed_effects, Variable!="(Intercept)"))
+```
+
+```{r}
+print(paste0("The end!!!"))
+```

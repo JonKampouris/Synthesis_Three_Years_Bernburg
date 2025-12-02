@@ -1,0 +1,292 @@
+```{r,  results="hide"}
+library(tidyverse)# Tidying up the data, Version 2.0.0
+library(ggplot2) # Creating graphs, Version 3.5.1
+library(plyr) # Tidying up data, Version 1.8.9
+library(dplyr) #Tidying up data, Version 1.1.4
+library(readr) # Loading text files, Version 2.1.5
+library(readxl) # Loading excel files, Version 1.4.4
+library(ggpubr) # Adding statistics in plots, Version 0.6.0 
+library(stringi) # String selection tool, Version 1.8.4 
+library(tidyr) # Tidying up the data, Version 1.3.1
+library(reshape2) # Reshaping the data and infer statistics, Version 1.4.4
+library(stringi) # String manipulation though regular expression, Version 1.8.2
+library(parallel) # Parallel proscessing, Version 4.4.2
+library(MicrobiomeStat) # LMM for compositional Microbiome data, Version 1.2
+library(ggvenn)
+library(gridExtra)
+```
+Differential abundance
+Load the tables
+```{r,  results="hide"}
+set.seed(01122025)
+ASVtaxonomy=read.csv(file.path("../InputData", "16S_ASV_Table_LTE_three_years.csv"))
+ASVtaxonomy=select(ASVtaxonomy, ASV, everything())
+#Keep the taxonomy of the ASV table
+ASVtaxonomy=ASVtaxonomy[,c(1:10)]
+
+for(i in 1:nrow( ASVtaxonomy)){
+  for(j in 1:ncol( ASVtaxonomy)){
+    if( is.na( ASVtaxonomy[i,j])==T){
+      ASVtaxonomy[i,j]=ASVtaxonomy[i,(j-1)]
+  }
+}  
+}
+
+ASVtable1= read.csv(file.path("../InputData", "16SMLERarefied_table.csv"), row.names = "X")
+Mean_abundances=as.data.frame(
+  apply(ASVtable1, 2, function(x) mean(x)))
+Frequencies=as.data.frame(
+  apply(ASVtable1, 2, function(x) sum(x>0))
+)
+metadata=read.csv(file.path("../InputData", "metadata1.csv"))%>%na.omit()
+metadata$ID=metadata$Sample
+```
+
+
+Generate metadata from the sample names
+Convert Tillage and Fertilization intensity (Int) to numerical values (0,1)
+
+```{r,  results="hide"}
+metadata$Tillage2=metadata$Tillage
+metadata$Tillage2[metadata$Tillage2=="CT"]=0
+metadata$Tillage2[metadata$Tillage2=="MP"]=1
+metadata$Tillage2=as.numeric(metadata$Tillage2)
+metadata$Int2=metadata$Int
+metadata$Int2=metadata$Int2
+metadata$Int2[metadata$Int2=="Ext"]=0
+metadata$Int2[metadata$Int2=="Int"]=1
+metadata$Int2=as.numeric(metadata$Int2)
+metadata$Sequencer=metadata$Year
+metadata$Sequencer[metadata$Sequencer==2019]="MiSeq"
+metadata$Sequencer[metadata$Sequencer!="MiSeq"]="NovaSeq"
+```
+Filter the metadata
+```{r,  results="hide"}
+metadata_RH=filter(metadata, Soil_Type=="RH")
+```
+
+
+```{r,  results="hide"}
+metadata_selection=filter(metadata_RH)
+file1=cbind(metadata_selection, ASVtable1[metadata_selection$ID,])
+file1$G=paste0(file1$Year, file1$Int, file1$Sequencer)
+
+file2=linda(
+  t(ASVtable1[file1$ID,]),
+  file1,
+  formula =  '~Tillage2+ (1|G)',
+  feature.dat.type = "proportion",
+  prev.filter = 0.2,
+  is.winsor = TRUE,
+  zero.handling = "pseudo-count",
+  pseudo.cnt = 0.5,
+  p.adj.method = "BH",
+  alpha = 0.05,
+  n.cores = 1, #20 for Linux or MacOS,
+  verbose = TRUE
+)
+mixed_Tillage_RH=as.data.frame(file2$output) %>%
+  filter(Tillage2.padj<0.05) %>%
+  rownames_to_column(var="ASV") %>%
+  select(ASV,  stat=Tillage2.stat, Mean=Tillage2.baseMean, padj=Tillage2.padj) %>%
+  mutate(Treatment="Tillage", Soil_Type="RH")
+
+```
+
+Fert-Int test RH
+```{r,  results="hide"}
+metadata_selection=filter(metadata_RH)
+file1=cbind(metadata_selection, ASVtable1[metadata_selection$ID,])
+file1$G=paste0(file1$Year,file1$Sequencer, file1$Tillage)
+file2=linda(
+  t(ASVtable1[file1$ID,]),
+  file1,
+  formula =  '~Int2+ (1|G)',
+  feature.dat.type = "proportion",
+  prev.filter = 0.2,
+  is.winsor = TRUE,
+  zero.handling = "pseudo-count",
+  pseudo.cnt = 0.5,
+  p.adj.method = "BH",
+  alpha = 0.05,
+  n.cores = 1, #20 for Linux or MacOS,
+  verbose = TRUE
+)
+
+mixed_Int_RH=as.data.frame(file2$output) %>%
+  filter(Int2.padj<0.05)
+
+if (nrow(mixed_Int_RH)==0) {
+  mixed_Int_RH = data.frame()
+} else {
+  mixed_Int_RH = mixed_Int_RH %>%
+    rownames_to_column(var="ASV")%>%
+    select(ASV, stat=Int2.stat, Mean=Int2.baseMean, padj=Int2.padj) %>%
+    mutate(Treatment="Int", Soil_Type="RH")
+}
+```
+
+
+```{r,  results="hide"}
+metadata_RAS=filter(metadata, Soil_Type=="RAS")
+```
+
+```{r,  results="hide"}
+metadata_selection=(metadata_RAS)
+file1=cbind(metadata_selection, ASVtable1[metadata_selection$ID,])
+file1$G=paste0(file1$Year, file1$Int, file1$Sequencer)
+
+file2=linda(
+  t(ASVtable1[file1$ID,]),
+  file1,
+  formula =  '~Tillage2+ (1|G)',
+  feature.dat.type = "proportion",
+  prev.filter = 0.2,
+  is.winsor = TRUE,
+  zero.handling = "pseudo-count",
+  pseudo.cnt = 0.5,
+  p.adj.method = "BH",
+  alpha = 0.05,
+  n.cores = 1, #20 for Linux or MacOS,
+  verbose = TRUE
+)
+mixed_Tillage_RAS=as.data.frame(file2$output) %>%
+  filter(Tillage2.padj<0.05) %>%
+  rownames_to_column(var="ASV") %>%
+  select(ASV, stat=Tillage2.stat, Mean=Tillage2.baseMean, padj=Tillage2.padj) %>%
+  mutate(Treatment="Tillage", Soil_Type="BS")
+```
+
+```{r,  results="hide"}
+metadata_selection=(metadata_RAS)
+file1=cbind(metadata_selection, ASVtable1[metadata_selection$ID,])
+file1$G=paste0(file1$Year, file1$Tillage, file1$Sequencer)
+
+file2=linda(
+  t(ASVtable1[file1$ID,]),
+  file1,
+  formula =  '~Int2+ (1|G)',
+  feature.dat.type = "proportion",
+  prev.filter = 0.2,
+  is.winsor = TRUE,
+  zero.handling = "pseudo-count",
+  pseudo.cnt = 0.5,
+  p.adj.method = "BH",
+  alpha = 0.05,
+  n.cores = 1, #20 for Linux or MacOS,
+  verbose = TRUE
+)
+mixed_Int_RAS=as.data.frame(file2$output) %>%
+  filter(Int2.padj<0.05) %>%
+  rownames_to_column(var="ASV") %>%
+  select(ASV,  stat=Int2.stat, Mean=Int2.baseMean, padj=Int2.padj) %>%
+  mutate(Treatment="Int", Soil_Type="BS")
+```
+
+Merge all differential abundant tables
+```{r,  results="hide"}
+
+all_mixed_models=
+rbind(
+  mixed_Tillage_RH,
+  mixed_Tillage_RAS,
+  mixed_Int_RH,
+  mixed_Int_RAS
+)
+
+all_mixed_models2=full_join(all_mixed_models, ASVtaxonomy, by ="ASV")%>%filter(padj!="NA")
+all_mixed_models2$Treatment=gsub("Int", "N-fert. intensity", all_mixed_models2$Treatment)
+all_mixed_models2$Treatment=gsub("Tillage", "Tillage intensity", all_mixed_models2$Treatment)
+
+write.csv(file = file.path("../OutputData", "TableS3_RespondersPlot.csv"), all_mixed_models2)
+
+
+tillage_mixed_models=
+rbind(
+  mixed_Tillage_RH,
+  mixed_Tillage_RAS
+ 
+)
+tillage_mixed_models2=full_join(tillage_mixed_models, ASVtaxonomy, by ="ASV")%>%filter(padj!="NA")
+tillage_mixed_models2$Treatment=gsub("Int", "N-fert. intensity", tillage_mixed_models2$Treatment)
+tillage_mixed_models2$Treatment=gsub("Tillage", "Tillage intensity", tillage_mixed_models2$Treatment)
+
+
+```
+Plot the results
+```{r,  results="hide"}
+plot1= ggplot(tillage_mixed_models2, aes(x=(100*(Mean)/1000000), y=stat, fill=tax.Phylum)) +
+  geom_point(shape=21, size=10)+facet_wrap(~Soil_Type~Treatment, scales = "free") +
+  scale_fill_brewer(palette="Set3", direction=-1, name="ASV taxonomy (phylum level)") +
+  
+  theme_bw() +
+  theme(strip.background=element_rect(fill="white", colour="black")) +
+  theme(strip.text=element_text(colour="black", size=35)) +
+  
+  theme(axis.text.y=element_text(size=35,colour="black")) +
+  theme(axis.text.x=element_text(size=35,colour="black")) +
+  theme(axis.title.x=element_text(size=35,colour="black")) +
+
+  theme(legend.text=element_text(size=35,colour="black")) + 
+  theme(legend.title=element_text(size=35,colour="black")) + 
+  theme(legend.position="right", axis.title.y=element_text(size=35,colour="black")) + 
+  theme(legend.key.size=unit(2,"cm")) +
+
+  ylab(expression("Log2 FC/St. errors of the coefficients")) +
+  xlab(expression("Mean Log10 RA%")) +
+  scale_x_continuous(breaks = c(0,0.5,1))
+
+```
+Plot the results
+```{r,  results="hide"}
+
+BS_pos_resp <- tillage_mixed_models2 %>% filter(Soil_Type == "BS", stat > 0)
+BS_neg_resp <- tillage_mixed_models2 %>% filter(Soil_Type == "BS", stat < 0)
+RH_pos_resp <- tillage_mixed_models2 %>% filter(Soil_Type == "RH", stat > 0)
+RH_neg_resp <- tillage_mixed_models2 %>% filter(Soil_Type == "RH", stat < 0)
+
+data_pos <- list(
+     "BS" = BS_pos_resp$ASV
+    ,"RH" = RH_pos_resp$ASV
+)
+
+data_neg <- list(
+     "BS" = BS_neg_resp$ASV
+    ,"RH" = RH_neg_resp$ASV
+)
+
+plot_pos <- ggvenn(data_pos, 
+  c("BS", "RH"),set_name_size=11,text_size =11) +
+  theme(plot.title=element_text(size=35,face="bold",hjust=0.5)) +
+  ggtitle("MP-responders (positive)") 
+
+plot_neg <- ggvenn(data_neg, 
+  c("BS", "RH"),set_name_size=11,text_size=11) +
+  theme(plot.title=element_text(size=35,face="bold",hjust=0.5)) +
+  ggtitle("CT-responders (negative)") 
+
+plot2 = grid.arrange(plot_pos, plot_neg, ncol=2)
+
+
+```
+
+Combine plots
+```{r}
+plots=ggarrange(plot1,plot2, 
+  labels = c("A)","B)"),
+  font.label = list(face="bold",size=25), 
+  ncol=1, nrow=2, heights=c(2, 1) 
+  )
+  
+```
+
+Save plot
+```{r}
+png(filename = "Fig2_RespondersPlot.png", height = 8500,
+    width = 10000, res=350)
+print(plots) 
+dev.off()
+```
+```{r}
+print("The End")
+```

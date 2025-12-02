@@ -1,0 +1,368 @@
+```{r}
+library(dplyr)
+library(tidyr)
+library(lme4)
+library(tidyverse)
+library(ggpubr)
+library(ggtext)
+library(reshape2)
+```
+
+Load the soil data
+```{r}
+soil_lab = read.csv(file.path("../InputData", "soil_lab.csv"), check.names=F)
+soil_lab_reduced = soil_lab[, c("Experimental_Year", "Block", "Tillage", "Fertilization", "OM[%]")]
+soil_lab_reduced <- soil_lab_reduced %>% dplyr::rename(Year = Experimental_Year)
+soil_lab_reduced <- soil_lab_reduced %>%
+  mutate(Block = case_when(
+    Year == 2019 & Block == "A1" ~ "1",
+    Year == 2019 & Block == "A3" ~ "2",
+    Year == 2019 & Block == "B1" ~ "3",
+    Year == 2019 & Block == "B3" ~ "4",
+    TRUE ~ Block 
+  ))
+
+soil_lab_reduced <- soil_lab_reduced %>%
+  mutate(Block = case_when(
+    Block == "A2" ~ "1",
+    Block == "A3" ~ "2",
+    Block == "B1" ~ "3",
+    Block == "B2" ~ "4",
+    TRUE ~ Block
+  ))
+
+soil_lab_reduced <- soil_lab_reduced %>%
+  mutate(Tillage = recode(Tillage, "Plough" = "MP", "Cultivator" = "CT")) %>%
+  mutate(Fertilization = recode(Fertilization, "extensive" = "Ext", "intensive" = "Int")) %>% 
+  dplyr::rename("OM" = "OM[%]")
+
+```
+
+Load the 16S data
+```{r}
+metadata=read.csv(file.path("../InputData", "metadata1.csv"))%>%na.omit()
+#Load the metadata
+```
+
+Create the Sequencer metadata based on the sample name
+```{r}
+metadata$sequencer=metadata$Year
+metadata$sequencer[metadata$sequencer==2019]="miseq"
+metadata$sequencer[metadata$sequencer!="miseq"]="novaseq"
+metadata$ID=metadata$Sample
+GRfiles=read.csv(file.path("../InputData", "Tillage_GMs_Growth_rates.csv"))
+GRfiles=dcast(GRfiles,ASV+Soil_Type+stat~.,value.var = "DoublingTime", median)
+```
+Generate a distribution plot of the growth rates to select the best
+division point for slow and fast growing taxa.
+```{r}
+GRfiles <- GRfiles %>%
+  mutate(Soil_Type = recode(Soil_Type, "RAS" = "BS"))
+
+library(RColorBrewer)
+palette_colors<-brewer.pal(n=8,name="Dark2")
+
+distributionplot= ggplot(GRfiles,aes(x=log10(.),fill=Soil_Type)) +
+  theme_bw() + 
+  geom_density(alpha=0.5) +
+  ylab("Density") +
+  xlab("Log10 predicted minimal doubling time (hours) for CT-/MP-responders\nbased on minimal predicted values of mapped genomes") +
+  
+  theme(strip.background=element_rect(fill="white",colour="black")) +
+  theme(strip.text=element_text(size=25,colour="black")) +
+  
+  theme(axis.text.y=element_text(size=25,colour="black")) +
+  theme(axis.text.x=element_text(size=25,colour="black")) +
+  theme(axis.title.x=element_text(size=25,colour="black")) +
+ 
+  theme(legend.text=element_text(size=25,colour="black")) + 
+  theme(legend.title=element_text(size=25,colour="black")) + 
+  theme(legend.position="top",axis.title.y=element_text(size=25,colour="black")) + 
+  theme(legend.key.size=unit(2,"cm")) +
+  
+  geom_vline(aes(xintercept=log10(2.5)),colour="black",linetype="dashed") + 
+  geom_vline(aes(xintercept=log10(5)),colour="black",linetype="dashed") + 
+  geom_vline(aes(xintercept=log10(1.5)),colour="black",linetype="dashed") +
+  
+  scale_fill_manual(name = "", values = c("BS" = palette_colors[3], "RH" = palette_colors[6]))
+```
+
+```{r}
+GRfiles$Trait=GRfiles$.
+GRfiles$Trait[GRfiles$.>2.5]="slow_grower"
+GRfiles$Trait[GRfiles$.<=2.5]="fast_grower"
+```
+
+Read the differential abundances 
+```{r,  results="hide"}
+ASVtaxonomy=read.csv(file.path("../InputData", "16SMLERarefied_table.csv"),row.names = "X") %>%
+  t() %>%
+  as.data.frame() %>%
+  rownames_to_column(var="ASV")
+
+all_mixed_models_diff=read.csv(file.path("../InputData", "ALL_LLM_testing_with_taxonomy.csv"))
+bac_rer_number=unique(colSums( ASVtaxonomy[,-1]))
+```
+Calculate the ratio of ASVs related to fast and slow growing bacteria in 
+every sample
+```{r}
+all_mixed_models_diff_Ratio_RAS=filter(GRfiles, Soil_Type=="BS")%>%select(ASV, Trait)
+ASVtaxonomy_Ratio_RAS=filter(ASVtaxonomy, 
+    ASV%in%c(all_mixed_models_diff_Ratio_RAS$ASV))%>%
+  gather(-ASV, key="Sample",value="RA")%>% filter(Sample%in%c(unique(metadata$Sample)))%>%
+  
+    full_join(metadata) %>%
+select(Fertilization=Int, everything()) %>%
+  filter(Soil_Type=="RAS") %>%
+
+full_join(all_mixed_models_diff_Ratio_RAS)%>%filter(RA!="NA")
+
+ASVtaxonomy_Ratio_RAS$Block=as.character(ASVtaxonomy_Ratio_RAS$Block)
+
+RAS_Ratio_data16S <- full_join(soil_lab_reduced, ASVtaxonomy_Ratio_RAS, 
+                         by = c("Year", "Tillage", "Fertilization", "Block"))%>%
+  filter(RA!="NA")
+RAS_Ratio_data16S2=dcast(RAS_Ratio_data16S, 
+OM+Sample+Tillage+Fertilization+sequencer+Year~Trait,
+value.var = "RA",sum)
+
+RAS_Ratio_data16S2$Ratio=log10((
+RAS_Ratio_data16S2$slow_grower+1)/(RAS_Ratio_data16S2$fast_grower+1))
+```
+root-associated soil
+```{r}
+all_mixed_models_diff_Ratio_RH=filter(GRfiles, Soil_Type=="RH")%>%select(ASV, Trait)
+
+ASVtaxonomy_Ratio_RH=filter(ASVtaxonomy, ASV%in%c(all_mixed_models_diff_Ratio_RH$ASV))%>%
+  gather(-ASV, key="Sample",value="RA")%>% filter(Sample%in%c(unique(metadata$Sample)))%>%
+  
+    full_join(metadata) %>%
+select(Fertilization=Int, everything()) %>%
+  filter(Soil_Type=="RH") %>%
+
+full_join(all_mixed_models_diff_Ratio_RH)%>%filter(RA!="NA")
+
+ASVtaxonomy_Ratio_RH$Block=as.character(ASVtaxonomy_Ratio_RH$Block)
+
+RH_Ratio_data16S <- full_join(soil_lab_reduced, ASVtaxonomy_Ratio_RH, 
+                         by = c("Year", "Tillage", "Fertilization", "Block"))%>%filter(RA!="NA")
+RH_Ratio_data16S2=dcast(RH_Ratio_data16S, 
+OM+Sample+Tillage+Fertilization+sequencer+Year~Trait, value.var = "RA",
+sum)
+
+RH_Ratio_data16S2$Ratio=log10((
+RH_Ratio_data16S2$slow_grower+1)/(RH_Ratio_data16S2$fast_grower+1))
+```
+
+```{r}
+ras_memodel1 <- lme4::lmer(scale(OM)~scale(Ratio)  + (1|Year:sequencer), data = RAS_Ratio_data16S2)
+#Apply Bootstrap for inferring p-values and 95% CI
+boot.out = bootMer(ras_memodel1, fixef, seed=11122022, nsim=10000, parallel = "multicore", ncpus = 25) 
+print("Boot  finished")
+  
+CI.lower = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.025, na.rm=TRUE)))
+CI.upper = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.975, na.rm=TRUE)))
+results_df = as.data.frame(summary(boot.out))
+p = rbind(
+    (1-apply(boot.out$t<0, 2, mean))*2,
+    (1-apply(boot.out$t>0, 2, mean))*2)
+RAS_pvalues1=data.frame(pval= apply(p, 2, min))
+
+ras_memodel1 <- lme4::lmer(scale(OM)~scale(Ratio)  + (1|Year), data = RAS_Ratio_data16S2)
+#Apply Bootstrap for inferring p-values and 95% CI
+boot.out = bootMer(ras_memodel1, fixef, seed=11122022, nsim=10000, parallel = "multicore", ncpus = 25) 
+print("Boot  finished")
+  
+CI.lower = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.025, na.rm=TRUE)))
+CI.upper = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.975, na.rm=TRUE)))
+results_df = as.data.frame(summary(boot.out))
+p = rbind(
+    (1-apply(boot.out$t<0, 2, mean))*2,
+    (1-apply(boot.out$t>0, 2, mean))*2)
+RAS_pvalues1=data.frame(pval= apply(p, 2, min))
+
+results_df_RAS_reg=data.frame( regmedian=results_df$bootMed[2],regupper=CI.upper[2],
+reglower=CI.lower[2], reg_p= RAS_pvalues1$pval[2], Soil_Type="RAS")
+
+```
+
+
+```{r}
+RAS_Ratio_data16S2$till2=RAS_Ratio_data16S2$Tillage
+RAS_Ratio_data16S2$till2[RAS_Ratio_data16S2$till2=="CT"]=0
+RAS_Ratio_data16S2$till2[RAS_Ratio_data16S2$till2=="MP"]=1
+RAS_Ratio_data16S2$till2=as.numeric(RAS_Ratio_data16S2$till2)
+
+ras_memodel2 <- lme4::lmer(scale(Ratio)~till2  + (1|Year:sequencer), data = RAS_Ratio_data16S2)
+#Apply Bootstrap for inferring p-values and 95% CI
+boot.out = bootMer(ras_memodel2, fixef, seed=11122022, nsim=10000, parallel = "multicore", ncpus = 25) 
+print("Boot  finished")
+  
+CI.lower = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.025, na.rm=TRUE)))
+CI.upper = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.975, na.rm=TRUE)))
+results_df = as.data.frame(summary(boot.out))
+p = rbind(
+    (1-apply(boot.out$t<0, 2, mean))*2,
+    (1-apply(boot.out$t>0, 2, mean))*2)
+RAS_pvalues2=data.frame(pval= apply(p, 2, min))
+results_df_RAS_diff=data.frame(median=results_df$bootMed[2],diffupper=CI.upper[2],
+difflower=CI.lower[2], p= RAS_pvalues2$pval[2], Soil_Type="RAS")
+
+
+```
+
+
+```{r}
+RH_memodel1 <- lme4::lmer(scale(OM)~scale(Ratio)  + (1|Year:sequencer), data = RH_Ratio_data16S2)
+#Apply Bootstrap for inferring p-values and 95% CI
+boot.out = bootMer(RH_memodel1, fixef, seed=11122022, nsim=10000, parallel = "multicore", ncpus = 25) 
+print("Boot  finished")
+  
+CI.lower = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.025, na.rm=TRUE)))
+CI.upper = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.975, na.rm=TRUE)))
+results_df = as.data.frame(summary(boot.out))
+p = rbind(
+    (1-apply(boot.out$t<0, 2, mean))*2,
+    (1-apply(boot.out$t>0, 2, mean))*2)
+RH_pvalues1=data.frame(pval= apply(p, 2, min))
+
+RH_memodel1 <- lme4::lmer(scale(OM)~scale(Ratio)  + (1|Year), data = RH_Ratio_data16S2)
+#Apply Bootstrap for inferring p-values and 95% CI
+boot.out = bootMer(RH_memodel1, fixef, seed=11122022, nsim=10000, parallel = "multicore", ncpus = 25) 
+print("Boot  finished")
+  
+CI.lower = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.025, na.rm=TRUE)))
+CI.upper = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.975, na.rm=TRUE)))
+results_df = as.data.frame(summary(boot.out))
+p = rbind(
+    (1-apply(boot.out$t<0, 2, mean))*2,
+    (1-apply(boot.out$t>0, 2, mean))*2)
+RH_pvalues1=data.frame(pval= apply(p, 2, min))
+
+
+results_df_RH_reg=data.frame( regmedian=results_df$bootMed[2],regupper=CI.upper[2],
+reglower=CI.lower[2], reg_p= RH_pvalues1$pval[2], Soil_Type="RH")
+```
+
+
+
+```{r}
+RH_Ratio_data16S2$till2=RH_Ratio_data16S2$Tillage
+RH_Ratio_data16S2$till2[RH_Ratio_data16S2$till2=="CT"]=0
+RH_Ratio_data16S2$till2[RH_Ratio_data16S2$till2=="MP"]=1
+RH_Ratio_data16S2$till2=as.numeric(RH_Ratio_data16S2$till2)
+
+RH_memodel2 <- lme4::lmer(scale(Ratio)~till2  + (1|Year:sequencer), data = RH_Ratio_data16S2)
+#Apply Bootstrap for inferring p-values and 95% CI
+boot.out = bootMer(RH_memodel2, fixef, seed=11122022, nsim=10000, parallel = "multicore", ncpus = 25) 
+print("Boot  finished")
+  
+CI.lower = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.025, na.rm=TRUE)))
+CI.upper = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.975, na.rm=TRUE)))
+results_df = as.data.frame(summary(boot.out))
+p = rbind(
+    (1-apply(boot.out$t<0, 2, mean))*2,
+    (1-apply(boot.out$t>0, 2, mean))*2)
+
+RH_pvalues2=data.frame(pval= apply(p, 2, min))
+results_df_RH_diff=data.frame( median=results_df$bootMed[2],diffupper=CI.upper[2],
+difflower=CI.lower[2], p= RH_pvalues2$pval[2], Soil_Type="RH")
+```
+
+
+```{r}
+combined_dataframe= full_join( rbind(results_df_RH_diff,results_df_RAS_diff),
+rbind(results_df_RH_reg,results_df_RAS_reg))
+ RAS_Ratio_df= rbind( RAS_Ratio_data16S2%>%mutate(Soil_Type="RAS"), 
+RH_Ratio_data16S2%>%mutate(Soil_Type="RH"))%>%
+   full_join(combined_dataframe)
+```
+
+Change the RAS to BS (Bulk-Soil) to have harmonized terms
+```{r}
+RAS_Ratio_df$Soil_Type[RAS_Ratio_df$Soil_Type=="RAS"]="BS"
+```
+Generate the mixed effect plots
+```{r}
+plotdiff=
+ggplot(RAS_Ratio_df, 
+  aes(x=Soil_Type, y=Ratio,  fill= paste(Tillage))) +
+  geom_jitter(shape=21, size=2, position = position_jitterdodge(jitter.width =0.25,dodge.width = 1)) +
+  geom_boxplot(alpha=0.5, position = position_dodge(width = 1)) +
+  
+  scale_fill_brewer(name="",palette = "Dark2") +
+  theme_bw() +
+  xlab("") +
+  ylab("Log10 slow-/fast-growing bacterial taxa") +
+  theme(strip.background=element_rect(fill="white",colour="white")) +
+  theme(strip.text=element_text(size=25,colour="black",angle = 0)) +
+  
+  theme(axis.text.x=element_text(size=25,colour="black")) +
+  theme(axis.title.x=element_text(size=25,colour="black")) +
+  
+  theme(legend.text=element_text(size=25,colour="black")) + 
+  theme(legend.title=element_text(size=25,colour="black")) + 
+  theme(legend.position="top",
+        axis.text.y=element_text(size=25,colour="black"),
+        axis.title.y=element_text(size=25,colour="black")
+        ) + 
+  theme(legend.key.size=unit(2,"cm")) +
+  geom_richtext(y=0.6,aes(label=paste0("LMM: β1 = ", round(median,2)," [", round(diffupper,2),", ",round(difflower,2),"], <i>p</i>",ifelse(p == 0, " < 0.0001", paste0(" = ", round(p, 4)))), stat="summary"), size=8, fill=NA, label.color=NA) +
+  ylim(-0.4, 0.6)
+
+
+plotdreg=
+ggplot(RAS_Ratio_df, 
+  aes(x=(OM),y=Ratio,fill=as.factor(Year))) +
+  geom_point(shape=21) +
+  geom_smooth(method="lm") +
+  
+  scale_fill_brewer(name="",palette="Set1") +
+  theme_bw() +
+  xlab("Log10 SOM") +
+  ylab("Log10 slow-/fast-growing bacterial taxa") +
+  theme(strip.background=element_rect(fill="white",colour="white")) +
+  theme(strip.text=element_text(size=25,colour="black",angle=0)) +
+  
+  theme(axis.text.x=element_text(size=25,colour="black")) +
+  theme(axis.title.x=element_text(size=25,colour="black")) +
+  
+  theme(legend.text=element_text(size=25,colour="black")) + 
+  theme(legend.title=element_text(size=25,colour="black")) + 
+  theme(legend.position="top",
+        axis.text.y=element_text(size=25,colour="black"),
+        axis.title.y=element_text(size=25,colour="black")) + 
+  facet_wrap(~Soil_Type) +
+  theme(legend.key.size=unit(2,"cm"))+
+    geom_richtext(y=0.6, x=3.5,
+        aes(label=paste0("LMM: β1 = ", round(regmedian,2)," [", 
+round(regupper,2),", ",round(reglower,2),"], <i>p</i> = ", round(reg_p,4)), stat="summary"), size=8, fill=NA, label.color=NA) +
+  ylim(-0.4, 0.6) +  
+  xlim(2.3, 4.35)
+
+
+
+```
+combine plots 
+```{r}
+plots=ggarrange(distributionplot, plotdreg, plotdiff, 
+  labels=c("A)","B)","C)"),
+  font.label=list(face="bold",size=25), 
+  ncol=1, 
+  nrow=3
+  )
+```
+Save the plot
+```{r}
+png(filename="Figure6.png",
+      height = 9000,
+      width = 7000, 
+      res=350
+    )
+print(plots)
+dev.off()
+```
+
+```{r}
+print("The end!")
+```

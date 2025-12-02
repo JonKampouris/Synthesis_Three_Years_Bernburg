@@ -1,0 +1,125 @@
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(plyr)
+library(dplyr)
+library(readr)
+library(readxl)
+library(ggpubr)
+library(stringi)
+library(tidyr)
+library(reshape2)
+library(vegan)
+library(parallel)
+#library(phyloseq)
+```
+
+Upload the table
+```{r}
+# Upload ASV table 
+ASVtable1=read.csv(file.path("../InputData", "16S_ASV_Table_LTE_three_years.csv"), check.names=F)
+rownames(ASVtable1)=ASVtable1$ASV
+```
+
+```{r}
+#Calculate the sequencing coverage 
+seqnr=as.data.frame(cbind(
+  apply(ASVtable1[,15:(ncol(ASVtable1)-1)], 2, function (x) 100*(1-sum(x==1)/sum(x))),
+  apply(ASVtable1[,15:(ncol(ASVtable1)-1)], 2, function (x) sum(x))
+)
+)
+colnames(seqnr)=c("Coverage","Reads")
+```
+
+```{r}
+ASVtable_clean=ASVtable1[,15:(ncol(ASVtable1)-1)]
+depth1=data.frame(colSums(ASVtable_clean))
+colnames(depth1)="Depth"
+densityplot(depth1$Depth)          
+depth2=filter(depth1, Depth>15000)
+```
+
+```{r}
+library(parallel)
+
+quickRareCurve <- function (x, step=1, sample, xlab="Sample Size",
+                            ylab="Species", label=TRUE, col, lty, max.cores=T, nCores=15, ...)
+{
+  require(parallel)
+  x <- as.matrix(x)
+  if (!identical(all.equal(x, round(x)), TRUE))
+    stop("function accepts only integers (counts)")
+  if (missing(col))
+    col <- par("col")
+  if (missing(lty))
+    lty <- par("lty")
+  tot <- rowSums(x) # calculates library sizes
+  S <- specnumber(x) # calculates n species for each sample
+  if (any(S <= 0)) {
+    message("empty rows removed")
+    x <- x[S > 0, , drop = FALSE]
+    tot <- tot[S > 0]
+    S <- S[S > 0]
+  } # removes any empty rows
+  nr <- nrow(x) # number of samples
+  col <- rep(col, length.out = nr)
+  lty <- rep(lty, length.out = nr)
+  # parallel mclapply
+  # set number of cores
+  mc <- getOption("mc.cores", ifelse(max.cores, detectCores(), nCores))
+  out <- mclapply(seq_len(nr), mc.cores=1, function(i) {
+    n <- seq(1, tot[i], by = step)
+    if (n[length(n)] != tot[i])
+      n <- c(n, tot[i])
+    drop(rarefy(x[i, ], n))
+  })
+  Nmax <- sapply(out, function(x) max(attr(x, "Subsample")))
+  Smax <- sapply(out, max)
+  plot(c(1, max(Nmax)), c(1, max(Smax)), xlab=xlab, ylab=ylab,
+       type = "n", ...)
+  if (!missing(sample)) {
+    abline(v=sample)
+    rare <- sapply(out, function(z) approx(x=attr(z, "Subsample"),
+                                           y=z, xout=sample, rule=1)$y)
+    abline(h=rare, lwd=0.5)
+  }
+  for (ln in seq_along(out)) {
+    N <- attr(out[[ln]], "Subsample")
+    lines(N, out[[ln]], col=col[ln], lty=lty[ln], ...)
+  }
+  if (label) {
+    ordilabel(cbind(tot, S), labels=rownames(x), ...)
+  }
+  invisible(out)
+}
+
+
+rarefaction_curve = quickRareCurve(t(ASVtable_clean))  
+names(rarefaction_curve) <- paste("Sample", 1:ncol(ASVtable_clean), sep="")
+# Coerce data into "long" form.
+protox <- mapply(FUN=function(x, y) {
+  mydf <- as.data.frame(x)
+  colnames(mydf) <- "value"
+  mydf$species <- y
+  mydf$subsample <- attr(x, "Subsample")
+  mydf
+}, x=rarefaction_curve, y=as.list(names(rarefaction_curve)), SIMPLIFY=FALSE)
+
+xy <- do.call(rbind, protox)
+rownames(xy) <- NULL  # pretty
+
+
+
+# Plot the rarefaction curve.
+rarecurve_plot= ggplot(xy, aes(x=subsample, y=value, color=species)) +
+  theme_bw() +
+  scale_color_discrete(guide="none") +  # turn legend on or off
+  geom_line() + 
+  ylab("ASV Richness") +
+  xlab("Sequencing Depth")
+
+
+png("rarecurve.png", width = 400, height = 400)
+print(rarecurve_plot)
+dev.off()
+```

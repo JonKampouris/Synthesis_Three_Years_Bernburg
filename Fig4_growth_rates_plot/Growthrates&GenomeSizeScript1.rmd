@@ -1,0 +1,150 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: inline
+---
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+```
+
+```{r,  results="hide"}
+library(tidyverse)
+library(ggplot2)
+library(plyr)
+library(dplyr)
+library(readr)
+library(readxl)
+library(ggpubr)
+library(stringi)
+library(tidyr)
+library(reshape2)
+library(vegan)
+library(parallel)
+library(Biostrings)
+library(gRodon)
+library(introdataviz)
+```
+
+```{r,  results="hide"}
+setwd( "/home/ioannis.kampouris/Intensified_Agriculture_Three_Years")
+all_mixed_models_diff=read.csv(file="TableS1_Bacterial_Responders/ALL_LLM_testing_with_taxonomy.csv")
+
+all_mixed_models_diff2=dcast(all_mixed_models_diff, ASV+Sequence~., length)
+all_mixed_models_seq=DNAStringSet(all_mixed_models_diff2$Sequence)
+names(all_mixed_models_seq)=all_mixed_models_diff2$ASV
+Biostrings::writeXStringSet(all_mixed_models_seq,
+                            filepath = "16S_ASVdada2/ASVs.diff_ab_ASVs.fa", format = 'fasta')
+input1= dcast(all_mixed_models_diff, ASV+Sequence~., value.var = "ASV", length)
+#isolates_functions_and_sequence=read.csv(file="isolates_passed_functions.csv")
+```
+wget https://data.gtdb.ecogenomic.org/releases/release202/202.0/genomic_files_reps/bac120_ssu_reps_r202.tar.gz
+tar -xzf bac120_ssu_reps_r202.tar.gz
+usearch -makeudb_usearch *.fna -output db.udb
+
+usearch -usearch_global diff_ab_ASVs.fa -db db.udb -id 0.97  -evalue 1e-6 \
+-strand both  -maxaccepts 0 -maxrejects 0   \
+-threads 35  -blast6out  ASV_GTDB.mapped_global.txt
+
+
+
+Unfortunately the size of the genome files is to be big to be uploaded in a github 
+repo
+Please change "setwd( "/home/ioannis.kampouris/MLE_16S")" to your 
+directory if you want to run the code from the next parts.
+
+
+```{r,  results="hide"}
+setwd( "/home/ioannis.kampouris/MLE_16S")
+
+matches= read.delim(file =  "16S_ASVdada2/ASV_GTDB.mapped_global.txt", header = F)
+matches$codname=gsub(" d_*.*","", matches$V2)
+write.table(matches$genome, file =  "genomes/listgenomes.txt", 
+            row.names = F, quote=F)
+matches$genome=paste0( gsub("RS_","", gsub("GB_","", matches$codname)))
+paths= read.table(file =  "16S_ASVdada2/info_path.tsv")
+colnames(paths)=c("genome1", "path")
+paths$genome=paste0( gsub(".._genomic.fna.gz","", paths$genome1),".1")
+selectedpaths= full_join(select(matches, genome, ASV=V1), paths )%>%
+  filter(ASV!="NA")
+
+write.csv("16S_ASVdada2/codenames.txt")
+```
+
+**Download the genomes**
+filename='codenames.txt'
+while read i;
+   do 
+   echo "$i"
+
+  datasets download genome accession "$i" --filename "$i"_dataset.zip
+     
+done <"$filename"
+ 
+
+**Run PROKKA**
+for i in *zip; do S=$(echo ${i} | sed "s/.zip//g"); unzip "$i" -o  -d  unzipped/"$S"  ; done
+
+mkdir prok1
+ls | grep "dataset" > list_g.txt
+filename='list_g.txt'
+while read i; 
+ do 
+  do S=$(echo ${i} | sed "s/_dataset//g")
+  echo "$i"
+  echo "$S"
+    prokka "$i"/ncbi_dataset/data/"$S"/*fna -o prok1/"$i" -prefix "$i" --cpus 30
+done
+
+```{r, warning=FALSE}
+setwd( "/home/ioannis.kampouris/MLE_16S")
+path="/home/ioannis.kampouris/MLE_16S/genomes/unzipped/prok1"
+list1=list.files(path, pattern="*/*ffn", recursive = TRUE)
+pdlist=list()
+all_pds=function(x) {
+path_to_genome <- paste0(path, "/",list1[x])
+genes <- readDNAStringSet(path_to_genome)
+
+#Search for genes annotated as ribosomal proteins
+highly_expressed <- grepl("ribosomal protein",names(genes),ignore.case = T)
+pd1= predictGrowth(genes, highly_expressed, mode="partial")
+pd2=pd1$d
+pd3=data.frame(G1=paste0(list1[x]), DoublingTime=pd2)
+return(pd3)
+}
+results  =mclapply(1:length(list1), function(x)  all_pds(x), mc.cores = 30)
+results2=do.call("rbind",results)%>%separate(., col=G1, into=c("Genome","PR"),
+                                             sep="/")%>%
+  mutate(genome=str_replace(Genome, "_dataset",""))
+matches2=full_join(matches, results2) 
+matches3=na.omit(matches2)
+matches4=filter(matches2, !genome%in%c(matches3$genome))
+matches5=full_join( all_mixed_models_diff, 
+select(matches3, ASV=V1, everything()))
+matches5$till2=matches5$stat
+matches5$till2[matches5$till2>0]="MP"
+matches5$till2[matches5$till2!="MP"]="CT"
+matches5=na.omit(matches5)
+matches5$till3=ifelse(matches5$till2 == "CT", 0, 1)
+```
+
+Save the growth rates data in a single file.
+Note:
+Originally this script was one, but the genomes size is to big to be uploaded 
+in GitHub.
+
+```{r}
+write.csv(file = "Tillage_GMs_Growth_rates.csv",
+          matches5)
+```
+
+```{r}
+```
+
+***Run in Bash***
+***Find the NCBI datasets and save the files in a location***
+
+find . -name "*.zip" -exec unzip -o {} -d  \;
+genome size command :
+ checkm2 predict  --input repo1 -o size1 --threads 20 -x fasta
+ 
+ 
