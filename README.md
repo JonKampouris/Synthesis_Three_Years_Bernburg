@@ -15,7 +15,7 @@ in the bulk soil, but not in the rhizosphere.
 Python scripts to prepare the dataset from the BonaRes Repositroy ["Westerfeld: Long-term field trial on tillage and fertilization in crop rotation"](https://doi.org/10.20387/bonares-w669-gdsd)
 can be accessed [`here`](Preparation). The scripts generate tables for the folder [`InputData`](InputData) or provide details used within the manuscript. 
 ### 16S_ASVdada2
-16S rRNA gene amplicon sequencing data can be downloaded via the ascension numbers (Table S1) using SRA toolkit, using the prefetch and fasterq-dump functions. 
+Thisfile contains the proscessing of the 16S rRNA gene amplicon sequencing data. The data can be downloaded via the ascension numbers (Table S1) using SRA toolkit, with the prefetch and fasterq-dump functions. 
 ### InputData
 These files are required to execute the R code.
 ### Fig1_SoilLab
