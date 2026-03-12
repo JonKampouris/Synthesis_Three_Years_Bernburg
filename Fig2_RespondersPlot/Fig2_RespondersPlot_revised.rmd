@@ -64,8 +64,8 @@ multiple_glm= function(x){
 
   Table_glm=glm(file1$Tillage2~scale(x), family=binomial(link="logit"))
   file2=anova(Table_glm, test = "Chisq")
-  FC1=dcast(data.frame(T=file1$Tillage2, A=x), T~., value.var = "A",  mean)
-  FC2=log2((FC1[1,2]+1)/(FC1[2,2]+1))
+  FC1=dcast(data.frame(T=file1$Tillage, A=x), T~., value.var = "A",  mean)
+  FC2=log2((FC1[2,2]+1)/(FC1[1,2]+1))
   file3=data.frame(coeff=(Table_glm$coefficients[2]), p=file2$`Pr(>Chi)`[2], FC=FC2, Mean=mean(x))
   
   return(file3)
@@ -92,6 +92,31 @@ for (i in unique(metadata$Group)){
   
 }
 ```
+```{r}
+#Needs correction for the colours.
+plot1= ggplot(comparison_list2, aes(x=log10(100*(Mean)/15349), y=FC, fill=tax.Phylum)) +
+  geom_point(shape=21, size=5)+facet_wrap(~paste(Soil_Type, Year), ncol=2, scales = "free") +
+  scale_fill_brewer(palette="Set3", direction=-1, name="ASV taxonomy (phylum level)") +
+  
+  theme_bw() +
+  theme(strip.background=element_rect(fill="white", colour="black")) +
+  theme(strip.text=element_text(colour="black", size=25)) +
+  
+  theme(axis.text.y=element_text(size=25,colour="black")) +
+  theme(axis.text.x=element_text(size=25,colour="black")) +
+  theme(axis.title.x=element_text(size=25,colour="black")) +
+
+  theme(legend.text=element_text(size=25,colour="black")) + 
+  theme(legend.title=element_text(size=25,colour="black")) + 
+  theme(legend.position="right", axis.title.y=element_text(size=25,colour="black")) + 
+  theme(legend.key.size=unit(2,"cm")) +
+
+  ylab(expression("Log2 FC")) +
+  xlab(expression("Mean Log10 RA%")) 
+
+
+```
+
 
 
 ````{r}
@@ -109,6 +134,7 @@ Biostrings::writeXStringSet(sequences1, paste0("../OutputData", "ASV.fasta"),  f
 ````
 Plot the results
 ```{r,  results="hide"}
+#I reached until here. Please continue from Here and delete the comment.
 
 BS_pos_resp_2019 <- comparison_list2 %>% filter(Soil_Type == "BS", coeff > 0, Year==2019)
 BS_neg_resp_2019 <- comparison_list2 %>% filter(Soil_Type == "BS", coeff < 0, Year==2019)
@@ -126,10 +152,11 @@ RH_pos_resp_2021 <- comparison_list2 %>% filter(Soil_Type == "RH", coeff > 0,  Y
 RH_neg_resp_2021 <- comparison_list2 %>% filter(Soil_Type == "RH", coeff < 0, Year==2021)
 
 
-data_pos_2019 <- list(
-     "BS 2019" = BS_pos_resp_2019$ASV
-    ,"RH 2019" = RH_pos_resp_2019$ASV
+data_pos_BS <- list(
+     "BS_2019" = BS_pos_resp_2019$ASV
+    ,"BS_2020" = BS_pos_resp_2020$ASV
 
+    ,"BS_2021" = BS_pos_resp_2021$ASV
     
     )
 
@@ -139,7 +166,7 @@ data_neg_2019 <- list(
 )
 
 plot_pos <- ggvenn(data_pos, 
-  c("BS", "RH"),set_name_size=11,text_size =11) +
+  c("BS_2019", "BS_2020", "BS_2021"),set_name_size=11,text_size =11) +
   theme(plot.title=element_text(size=35,face="bold",hjust=0.5)) +
   ggtitle("MP-responders (positive)") 
 
