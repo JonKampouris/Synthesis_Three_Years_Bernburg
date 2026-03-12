@@ -1,0 +1,175 @@
+```{r,  results="hide"}
+library(tidyverse)# Tidying up the data, Version 2.0.0
+library(ggplot2) # Creating graphs, Version 3.5.1
+library(plyr) # Tidying up data, Version 1.8.9
+library(dplyr) #Tidying up data, Version 1.1.4
+library(readr) # Loading text files, Version 2.1.5
+library(readxl) # Loading excel files, Version 1.4.4
+library(ggpubr) # Adding statistics in plots, Version 0.6.0 
+library(stringi) # String selection tool, Version 1.8.4 
+library(tidyr) # Tidying up the data, Version 1.3.1
+library(reshape2) # Reshaping the data and infer statistics, Version 1.4.4
+library(stringi) # String manipulation though regular expression, Version 1.8.2
+library(parallel) # Parallel proscessing, Version 4.4.2
+library(MicrobiomeStat) # LMM for compositional Microbiome data, Version 1.2
+library(ggvenn)
+library(gridExtra)
+```
+Differential abundance
+Load the tables
+```{r,  results="hide"}
+set.seed(01122025)
+ASVtaxonomy=read.csv(file.path("../InputData", "16S_ASV_Table_LTE_three_years.csv"))
+ASVtaxonomy=select(ASVtaxonomy, ASV, everything())
+#Keep the taxonomy of the ASV table
+ASVtaxonomy=ASVtaxonomy[,c(1:10)]
+
+for(i in 1:nrow( ASVtaxonomy)){
+  for(j in 1:ncol( ASVtaxonomy)){
+    if( is.na( ASVtaxonomy[i,j])==T){
+      ASVtaxonomy[i,j]=ASVtaxonomy[i,(j-1)]
+  }
+}  
+}
+
+ASVtable1= read.csv(file.path("../InputData", "16SMLERarefied_table.csv"), row.names = "X")
+Mean_abundances=as.data.frame(
+  apply(ASVtable1, 2, function(x) mean(x)))
+Frequencies=as.data.frame(
+  apply(ASVtable1, 2, function(x) sum(x>0))
+)
+metadata=read.csv(file.path("../InputData", "metadata1.csv"))%>%na.omit()
+metadata$ID=metadata$Sample
+metadata$Soil_Type[metadata$Soil_Type=="RAS"]="BS"
+```
+
+
+Generate metadata from the sample names
+Convert Tillage and Fertilization intensity (Int) to numerical values (0,1)
+
+```{r,  results="hide"}
+metadata$Tillage2=metadata$Tillage
+metadata$Tillage2[metadata$Tillage2=="CT"]=0
+metadata$Tillage2[metadata$Tillage2=="MP"]=1
+metadata$Tillage2=as.numeric(metadata$Tillage2)
+metadata$Group=paste0(metadata$Soil_Type, "|", metadata$Year, "|",
+                      metadata$Int)
+```
+Set the multiple logistic regression
+```{r,  results="hide"}
+
+multiple_glm= function(x){
+   
+
+
+  Table_glm=glm(file1$Tillage2~scale(x), family=binomial(link="logit"))
+  file2=anova(Table_glm, test = "Chisq")
+  FC1=dcast(data.frame(T=file1$Tillage2, A=x), T~., value.var = "A",  mean)
+  FC2=log2((FC1[1,2]+1)/(FC1[2,2]+1))
+  file3=data.frame(coeff=(Table_glm$coefficients[2]), p=file2$`Pr(>Chi)`[2], FC=FC2, Mean=mean(x))
+  
+  return(file3)
+}
+```
+
+```{r}
+comparison_list=list()
+for (i in unique(metadata$Group)){
+  print(i)
+  file1=filter(metadata, Group==paste0(i) )
+  input1=(as.data.frame(ASVtable1[file1$ID,]))
+  input2=as.data.frame( apply(input1, 2, function (x) sum(x>0)))
+  colnames(input2)<-"Count"
+  input2=filter(input2, Count>3)
+  input3=as.data.frame(( input1[file1$ID,rownames(input2)]))
+  multiple_glms_2020_ASVs= apply(input3,2, function(x) multiple_glm(x))
+  multiple_glms_ASVs_df <- as.data.frame(do.call(rbind, multiple_glms_2020_ASVs))
+  multiple_glms_ASVs_df[is.na(multiple_glms_ASVs_df)]<-1
+  multiple_glms_ASVs_df$padj=p.adjust(multiple_glms_ASVs_df$p, method="BH")
+  multiple_glms_ASVs_df=filter(multiple_glms_ASVs_df)%>%mutate(Int=unique(file1$Int),
+   Year=unique(file1$Year ),Soil_Type= unique( file1$Soil_Type))
+  comparison_list=rbind(multiple_glms_ASVs_df%>%rownames_to_column(var="ASV"),comparison_list)
+  
+}
+```
+
+
+````{r}
+Taxonomy2=filter(ASVtaxonomy, ASV%in%c(unique(comparison_list2$ASV)))
+comparison_list2=filter(as.data.frame(comparison_list)%>%full_join(Taxonomy2), padj<0.05)
+````
+
+````{r}  
+write.csv(file = file.path("../OutputData", "TableS3_RespondersPlot.csv_revised"), comparison_list2)
+````
+````{r}
+sequences1=Biostrings::DNAStringSet( ASVtaxonomy$Sequence)
+names(sequences1)=ASVtaxonomy$ASV
+Biostrings::writeXStringSet(sequences1, paste0("../OutputData", "ASV.fasta"),  format = "fasta")
+````
+Plot the results
+```{r,  results="hide"}
+
+BS_pos_resp_2019 <- comparison_list2 %>% filter(Soil_Type == "BS", coeff > 0, Year==2019)
+BS_neg_resp_2019 <- comparison_list2 %>% filter(Soil_Type == "BS", coeff < 0, Year==2019)
+RH_pos_resp_2019 <- comparison_list2 %>% filter(Soil_Type == "RH", coeff > 0,  Year==2019)
+RH_neg_resp_2019 <- comparison_list2 %>% filter(Soil_Type == "RH", coeff < 0, Year==2019)
+
+BS_pos_resp_2020 <- comparison_list2 %>% filter(Soil_Type == "BS", coeff > 0, Year==2020)
+BS_neg_resp_2020 <- comparison_list2 %>% filter(Soil_Type == "BS", coeff < 0, Year==2020)
+RH_pos_resp_2020 <- comparison_list2 %>% filter(Soil_Type == "RH", coeff > 0,  Year==2020)
+RH_neg_resp_2020 <- comparison_list2 %>% filter(Soil_Type == "RH", coeff < 0, Year==2020)
+
+BS_pos_resp_2021 <- comparison_list2 %>% filter(Soil_Type == "BS", coeff > 0, Year==2021)
+BS_neg_resp_2021 <- comparison_list2 %>% filter(Soil_Type == "BS", coeff < 0, Year==2021)
+RH_pos_resp_2021 <- comparison_list2 %>% filter(Soil_Type == "RH", coeff > 0,  Year==2021)
+RH_neg_resp_2021 <- comparison_list2 %>% filter(Soil_Type == "RH", coeff < 0, Year==2021)
+
+
+data_pos_2019 <- list(
+     "BS 2019" = BS_pos_resp_2019$ASV
+    ,"RH 2019" = RH_pos_resp_2019$ASV
+
+    
+    )
+
+data_neg_2019 <- list(
+     "BS" = BS_neg_resp_2019$ASV
+    ,"RH" = RH_neg_resp_2019$ASV
+)
+
+plot_pos <- ggvenn(data_pos, 
+  c("BS", "RH"),set_name_size=11,text_size =11) +
+  theme(plot.title=element_text(size=35,face="bold",hjust=0.5)) +
+  ggtitle("MP-responders (positive)") 
+
+plot_neg <- ggvenn(data_neg, 
+  c("BS", "RH"),set_name_size=11,text_size=11) +
+  theme(plot.title=element_text(size=35,face="bold",hjust=0.5)) +
+  ggtitle("CT-responders (negative)") 
+
+plot2 = grid.arrange(plot_pos, plot_neg, ncol=2)
+
+
+```
+
+Combine plots
+```{r}
+plots=ggarrange(plot1,plot2, 
+  labels = c("A)","B)"),
+  font.label = list(face="bold",size=25), 
+  ncol=1, nrow=2, heights=c(2, 1) 
+  )
+  
+```
+
+Save plot
+```{r}
+png(filename = "Fig2_RespondersPlot.png", height = 8500,
+    width = 10000, res=350)
+print(plots) 
+dev.off()
+```
+```{r}
+print("The End")
+```
