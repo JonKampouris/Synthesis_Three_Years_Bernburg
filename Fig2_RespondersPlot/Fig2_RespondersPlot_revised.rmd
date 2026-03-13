@@ -14,9 +14,12 @@ library(parallel) # Parallel proscessing, Version 4.4.2
 library(MicrobiomeStat) # LMM for compositional Microbiome data, Version 1.2
 library(ggvenn)
 library(gridExtra)
+library(RColorBrewer)
 ```
+
 Differential abundance
 Load the tables
+
 ```{r,  results="hide"}
 set.seed(01122025)
 ASVtaxonomy=read.csv(file.path("../InputData", "16S_ASV_Table_LTE_three_years.csv"))
@@ -28,8 +31,8 @@ for(i in 1:nrow( ASVtaxonomy)){
   for(j in 1:ncol( ASVtaxonomy)){
     if( is.na( ASVtaxonomy[i,j])==T){
       ASVtaxonomy[i,j]=ASVtaxonomy[i,(j-1)]
-  }
-}  
+    }
+  }  
 }
 
 ASVtable1= read.csv(file.path("../InputData", "16SMLERarefied_table.csv"), row.names = "X")
@@ -42,7 +45,6 @@ metadata=read.csv(file.path("../InputData", "metadata1.csv"))%>%na.omit()
 metadata$ID=metadata$Sample
 metadata$Soil_Type[metadata$Soil_Type=="RAS"]="BS"
 ```
-
 
 Generate metadata from the sample names
 Convert Tillage and Fertilization intensity (Int) to numerical values (0,1)
@@ -60,8 +62,6 @@ Set the multiple logistic regression
 
 multiple_glm= function(x){
    
-
-
   Table_glm=glm(file1$Tillage2~scale(x), family=binomial(link="logit"))
   file2=anova(Table_glm, test = "Chisq")
   FC1=dcast(data.frame(T=file1$Tillage, A=x), T~., value.var = "A",  mean)
@@ -70,9 +70,12 @@ multiple_glm= function(x){
   
   return(file3)
 }
+
 ```
 
-```{r}
+Results of logistic Regression of ASVs across all three years
+
+```{r,  results="hide"}
 comparison_list=list()
 for (i in unique(metadata$Group)){
   print(i)
@@ -87,16 +90,28 @@ for (i in unique(metadata$Group)){
   multiple_glms_ASVs_df[is.na(multiple_glms_ASVs_df)]<-1
   multiple_glms_ASVs_df$padj=p.adjust(multiple_glms_ASVs_df$p, method="BH")
   multiple_glms_ASVs_df=filter(multiple_glms_ASVs_df)%>%mutate(Int=unique(file1$Int),
-   Year=unique(file1$Year ),Soil_Type= unique( file1$Soil_Type))
+   Year=unique(file1$Year ),Soil_Type= unique(file1$Soil_Type))
   comparison_list=rbind(multiple_glms_ASVs_df%>%rownames_to_column(var="ASV"),comparison_list)
-  
 }
+
+Taxonomy=filter(ASVtaxonomy, ASV%in%c(unique(comparison_list$ASV)))
+comparison_list2=filter(as.data.frame(comparison_list)%>%full_join(Taxonomy), padj<0.05)
 ```
+
+Plot the phyla 
+
 ```{r}
-#Needs correction for the colours.
-plot1= ggplot(comparison_list2, aes(x=log10(100*(Mean)/15349), y=FC, fill=tax.Phylum)) +
-  geom_point(shape=21, size=5)+facet_wrap(~paste(Soil_Type, Year), ncol=2, scales = "free") +
-  scale_fill_brewer(palette="Set3", direction=-1, name="ASV taxonomy (phylum level)") +
+
+set3_colors <- brewer.pal(12,"Set3")
+additional_colors <- c("white","black","grey")
+my_palette <- c(set3_colors, additional_colors)
+
+comparison_list2$Year <- factor(comparison_list2$Year, levels = sort(unique(comparison_list2$Year)))
+
+plotPhylum= ggplot(comparison_list2, aes(x=log10(100*(Mean)/15349), y=FC, fill=tax.Phylum)) +
+  geom_point(shape=21, size=5) +
+  facet_grid(Year ~ Soil_Type, scales = "free") +
+  scale_fill_manual(values=my_palette, name="ASV taxonomy (phylum level)") +
   
   theme_bw() +
   theme(strip.background=element_rect(fill="white", colour="black")) +
@@ -112,91 +127,131 @@ plot1= ggplot(comparison_list2, aes(x=log10(100*(Mean)/15349), y=FC, fill=tax.Ph
   theme(legend.key.size=unit(2,"cm")) +
 
   ylab(expression("Log2 FC")) +
-  xlab(expression("Mean Log10 RA%")) 
+  xlab(expression("Mean Log10 RA")) 
 
+png(filename = "Fig2_RespondersPhylum_revised.png", height = 6000,
+    width = 5500, res=350)
+print(plotPhylum) 
+dev.off()
 
 ```
 
-
-
-````{r}
-Taxonomy2=filter(ASVtaxonomy, ASV%in%c(unique(comparison_list2$ASV)))
-comparison_list2=filter(as.data.frame(comparison_list)%>%full_join(Taxonomy2), padj<0.05)
-````
+Export data 
 
 ````{r}  
-write.csv(file = file.path("../OutputData", "TableS3_RespondersPlot.csv_revised"), comparison_list2)
-````
-````{r}
-sequences1=Biostrings::DNAStringSet( ASVtaxonomy$Sequence)
+write.csv(file = file.path("../OutputData", "TableS3_RespondersPlot_revised.csv"), comparison_list2)
+
+sequences1=Biostrings::DNAStringSet(ASVtaxonomy$Sequence)
 names(sequences1)=ASVtaxonomy$ASV
 Biostrings::writeXStringSet(sequences1, paste0("../OutputData", "ASV.fasta"),  format = "fasta")
 ````
-Plot the results
-```{r,  results="hide"}
-#I reached until here. Please continue from Here and delete the comment.
 
+Plot the results of the venn diagramms
+
+```{r,  results="hide"}
+# Year 2019
 BS_pos_resp_2019 <- comparison_list2 %>% filter(Soil_Type == "BS", coeff > 0, Year==2019)
 BS_neg_resp_2019 <- comparison_list2 %>% filter(Soil_Type == "BS", coeff < 0, Year==2019)
-RH_pos_resp_2019 <- comparison_list2 %>% filter(Soil_Type == "RH", coeff > 0,  Year==2019)
+RH_pos_resp_2019 <- comparison_list2 %>% filter(Soil_Type == "RH", coeff > 0, Year==2019)
 RH_neg_resp_2019 <- comparison_list2 %>% filter(Soil_Type == "RH", coeff < 0, Year==2019)
 
-BS_pos_resp_2020 <- comparison_list2 %>% filter(Soil_Type == "BS", coeff > 0, Year==2020)
-BS_neg_resp_2020 <- comparison_list2 %>% filter(Soil_Type == "BS", coeff < 0, Year==2020)
-RH_pos_resp_2020 <- comparison_list2 %>% filter(Soil_Type == "RH", coeff > 0,  Year==2020)
-RH_neg_resp_2020 <- comparison_list2 %>% filter(Soil_Type == "RH", coeff < 0, Year==2020)
-
-BS_pos_resp_2021 <- comparison_list2 %>% filter(Soil_Type == "BS", coeff > 0, Year==2021)
-BS_neg_resp_2021 <- comparison_list2 %>% filter(Soil_Type == "BS", coeff < 0, Year==2021)
-RH_pos_resp_2021 <- comparison_list2 %>% filter(Soil_Type == "RH", coeff > 0,  Year==2021)
-RH_neg_resp_2021 <- comparison_list2 %>% filter(Soil_Type == "RH", coeff < 0, Year==2021)
-
-
-data_pos_BS <- list(
-     "BS_2019" = BS_pos_resp_2019$ASV
-    ,"BS_2020" = BS_pos_resp_2020$ASV
-
-    ,"BS_2021" = BS_pos_resp_2021$ASV
-    
-    )
+data_pos_2019 <- list(
+     "BS" = BS_pos_resp_2019$ASV
+    ,"RH" = RH_pos_resp_2019$ASV
+)
 
 data_neg_2019 <- list(
      "BS" = BS_neg_resp_2019$ASV
     ,"RH" = RH_neg_resp_2019$ASV
 )
 
-plot_pos <- ggvenn(data_pos, 
-  c("BS_2019", "BS_2020", "BS_2021"),set_name_size=11,text_size =11) +
-  theme(plot.title=element_text(size=35,face="bold",hjust=0.5)) +
-  ggtitle("MP-responders (positive)") 
+plot_pos_2019 <- ggvenn(data_pos_2019, 
+  c("BS", "RH"),set_name_size=4,text_size=4) + 
+  theme(plot.margin = unit(c(1, 1, 1, 1), "cm"))
 
-plot_neg <- ggvenn(data_neg, 
-  c("BS", "RH"),set_name_size=11,text_size=11) +
-  theme(plot.title=element_text(size=35,face="bold",hjust=0.5)) +
-  ggtitle("CT-responders (negative)") 
+plot_neg_2019 <- ggvenn(data_neg_2019, 
+  c("BS", "RH"),set_name_size=4,text_size=4) +
+  theme(plot.margin = unit(c(1, 1, 1, 1), "cm"))
 
-plot2 = grid.arrange(plot_pos, plot_neg, ncol=2)
+plot_2019 <- ggarrange(plot_pos_2019, plot_neg_2019, ncol=2, labels=c("MP-responders (positive)", "CT-responders (negative)"), font.label=list(size=14, face="bold"))
 
+# Year 2020
+BS_pos_resp_2020 <- comparison_list2 %>% filter(Soil_Type == "BS", coeff > 0, Year==2020)
+BS_neg_resp_2020 <- comparison_list2 %>% filter(Soil_Type == "BS", coeff < 0, Year==2020)
+RH_pos_resp_2020 <- comparison_list2 %>% filter(Soil_Type == "RH", coeff > 0, Year==2020)
+RH_neg_resp_2020 <- comparison_list2 %>% filter(Soil_Type == "RH", coeff < 0, Year==2020)
+
+data_pos_2020 <- list(
+     "BS" = BS_pos_resp_2020$ASV
+    ,"RH" = RH_pos_resp_2020$ASV
+)
+
+data_neg_2020 <- list(
+     "BS" = BS_neg_resp_2020$ASV
+    ,"RH" = RH_neg_resp_2020$ASV
+)
+
+plot_pos_2020 <- ggvenn(data_pos_2020, 
+  c("BS", "RH"),set_name_size=4,text_size=4) +
+  theme(plot.margin = unit(c(1, 1, 1, 1), "cm"))
+
+plot_neg_2020 <- ggvenn(data_neg_2020, 
+  c("BS", "RH"),set_name_size=4,text_size=4) +
+  theme(plot.margin = unit(c(1, 1, 1, 1), "cm"))
+
+plot_2020 <- ggarrange(plot_pos_2020, plot_neg_2020, ncol=2, labels=c("MP-responders (positive)", "CT-responders (negative)"), font.label=list(size=14, face="bold"))
+
+# Year 2021
+BS_pos_resp_2021 <- comparison_list2 %>% filter(Soil_Type == "BS", coeff > 0, Year==2021)
+BS_neg_resp_2021 <- comparison_list2 %>% filter(Soil_Type == "BS", coeff < 0, Year==2021)
+RH_pos_resp_2021 <- comparison_list2 %>% filter(Soil_Type == "RH", coeff > 0, Year==2021)
+RH_neg_resp_2021 <- comparison_list2 %>% filter(Soil_Type == "RH", coeff < 0, Year==2021)
+
+
+data_pos_2021 <- list(
+     "BS" = BS_pos_resp_2021$ASV
+    ,"RH" = RH_pos_resp_2021$ASV
+)
+
+data_neg_2021 <- list(
+     "BS" = BS_neg_resp_2021$ASV
+    ,"RH" = RH_neg_resp_2021$ASV
+)
+
+plot_pos_2021 <- ggvenn(data_pos_2021, 
+  c("BS", "RH"),set_name_size=4,text_size =4) +
+  theme(plot.margin = unit(c(1, 1, 1, 1), "cm"))
+
+plot_neg_2021 <- ggvenn(data_neg_2021, 
+  c("BS", "RH"),set_name_size=4,text_size=4) +
+  theme(plot.margin = unit(c(1, 1, 1, 1), "cm"))
+
+plot_2021 <- ggarrange(plot_pos_2021, plot_neg_2021, ncol=2, labels=c("MP-responders (positive)", "CT-responders (negative)"), font.label=list(size=14, face="bold"))
+
+plotVenn <- ggarrange(plot_2019, plot_2020, plot_2021, nrow=3, labels=c("2019", "2020", "2021"), font.label=list(size=16, face="bold"))
+
+png(filename = "Fig2_RespondersVenn_revised.png", height=3000, width=2750, res=300)
+print(plotVenn) 
+dev.off()
 
 ```
+Combine all plot1 and plotVenn
 
-Combine plots
 ```{r}
-plots=ggarrange(plot1,plot2, 
+
+plots=ggarrange(plotPhylum,plotVenn, 
   labels = c("A)","B)"),
   font.label = list(face="bold",size=25), 
-  ncol=1, nrow=2, heights=c(2, 1) 
-  )
-  
-```
+  ncol=2, nrow=1)
 
-Save plot
-```{r}
-png(filename = "Fig2_RespondersPlot.png", height = 8500,
-    width = 10000, res=350)
+png(filename = "Fig2_RespondersPlot_revised.png", height = 7000, width = 14000, res=300)
 print(plots) 
 dev.off()
+
 ```
+
+The End
+
 ```{r}
 print("The End")
 ```
