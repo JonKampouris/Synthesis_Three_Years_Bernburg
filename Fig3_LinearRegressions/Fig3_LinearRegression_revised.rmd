@@ -490,7 +490,7 @@ results_RH_MP_2021=cbind(results_df_RH_MP_2021, pvalues, lower=CI.lower, upper=C
 # than one divided by the number of bootstraps (10000)
 ```
 
-Create all 12 singe plots 
+Create all 12 single plots 
 
 ```{r}
 # Start Year 2019 
@@ -499,7 +499,7 @@ plot_results_RAS_CT_2019=ggplot(RAS_CT_data16S_2019,
   geom_point(shape=21) +
   geom_smooth(method = "lm", alpha=0.5) +
   ylab("SOM[%]") +
-  xlab("2019 (BS CT)") +
+  xlab("2019 BS CT") +
   theme_bw() +
   scale_fill_brewer(palette = "Set3", name="") +
   theme(plot.title=element_text(size=30,colour="black")) + 
@@ -524,7 +524,7 @@ plot_results_RH_CT_2019=ggplot(RH_CT_data16S_2019,
   geom_point(shape=21) +
   geom_smooth(method = "lm", alpha=0.5) +
   ylab(NULL) +
-  xlab("2019 (RH CT) ") +
+  xlab("2019 RH CT") +
   theme_bw() +
   scale_fill_brewer(palette = "Set3", name="Fertilization") +
   theme(plot.title=element_text(size=30,colour="black")) +
@@ -548,7 +548,7 @@ plot_results_RAS_MP_2019=ggplot(RAS_MP_data16S_2019,
   geom_point(shape=21) +
   geom_smooth(method = "lm", alpha=0.5) +
   ylab("SOM[%]") +
-  xlab("2019(BS MP) ") +
+  xlab("2019 BS MP") +
   theme_bw() +
   scale_fill_brewer(palette = "Set3", name="") +
   theme(plot.title=element_text(size=30,colour="black")) +
@@ -572,7 +572,7 @@ plot_results_RH_MP_2019=ggplot(RH_MP_data16S_2019,
   geom_point(shape=21) +
   geom_smooth(method = "lm", alpha=0.5) +
   ylab(NULL) +
-  xlab("2019(RH MP) ") +
+  xlab("2019 RH MP") +
   theme_bw() +
   scale_fill_brewer(palette = "Set3", name="") +
   theme(plot.title=element_text(size=30,colour="black")) +
@@ -597,7 +597,7 @@ plot_results_RAS_CT_2020=ggplot(RAS_CT_data16S_2020,
   geom_point(shape=21) +
   geom_smooth(method = "lm", alpha=0.5) +
   ylab(NULL) +
-  xlab("2020(BS CT)") +
+  xlab("2020 BS CT") +
   theme_bw() +
   scale_fill_brewer(palette = "Set3", name="") +
   theme(plot.title=element_text(size=30,colour="black")) + 
@@ -621,7 +621,7 @@ plot_results_RH_CT_2020=ggplot(RH_CT_data16S_2020,
   geom_point(shape=21) +
   geom_smooth(method = "lm", alpha=0.5) +
   ylab(NULL) +
-  xlab("2020(RH CT) ") +
+  xlab("2020 RH CT") +
   theme_bw() +
   scale_fill_brewer(palette = "Set3", name="") +
   theme(plot.title=element_text(size=30,colour="black")) +
@@ -645,7 +645,7 @@ plot_results_RAS_MP_2020=ggplot(RAS_MP_data16S_2020,
   geom_point(shape=21) +
   geom_smooth(method = "lm", alpha=0.5) +
   ylab(NULL) +
-  xlab("2020(BS MP) ") +
+  xlab("2020 BS MP") +
   theme_bw() +
   scale_fill_brewer(palette = "Set3", name="") +
   theme(plot.title=element_text(size=30,colour="black")) +
@@ -669,7 +669,7 @@ plot_results_RH_MP_2020=ggplot(RH_MP_data16S_2020,
   geom_point(shape=21) +
   geom_smooth(method = "lm", alpha=0.5) +
   ylab(NULL) +
-  xlab("2020(RH MP) ") +
+  xlab("2020 RH MP") +
   theme_bw() +
   scale_fill_brewer(palette = "Set3", name="") +
   theme(plot.title=element_text(size=30,colour="black")) +
@@ -694,7 +694,7 @@ plot_results_RAS_CT_2021=ggplot(RAS_CT_data16S_2021,
   geom_point(shape=21) +
   geom_smooth(method = "lm", alpha=0.5) +
   ylab(NULL) +
-  xlab("2021(BS CT)") +
+  xlab("2021 BS CT") +
   theme_bw() +
   scale_fill_brewer(palette = "Set3", name="") +
   theme(plot.title=element_text(size=30,colour="black")) + 
@@ -717,7 +717,7 @@ plot_results_RH_CT_2021=ggplot(RH_CT_data16S_2021,
   geom_point(shape=21) +
   geom_smooth(method = "lm", alpha=0.5) +
   ylab(NULL) +
-  xlab("2021(RH CT) ") +
+  xlab("2021 RH CT") +
   theme_bw() +
   scale_fill_brewer(palette = "Set3", name="") +
   theme(plot.title=element_text(size=30,colour="black")) +
@@ -744,7 +744,7 @@ plot_results_RAS_MP_2021=ggplot(RAS_MP_data16S_2021,
   geom_point(shape=21) +
   geom_smooth(method = "lm", alpha=0.5) +
   ylab(NULL) +
-  xlab("2021 (BS MP) ") +
+  xlab("2021 BS MP") +
   theme_bw() +
   scale_fill_brewer(palette = "Set3", name="") +
   theme(plot.title=element_text(size=30,colour="black")) +
@@ -767,7 +767,7 @@ plot_results_RH_MP_2021=ggplot(RH_MP_data16S_2021,
   geom_point(shape=21) +
   geom_smooth(method = "lm", alpha=0.5) +
   ylab(NULL) +
-  xlab("2021 RH MP ") +
+  xlab("2021 RH MP") +
   theme_bw() +
   scale_fill_brewer(palette = "Set3", name="") +
   theme(plot.title=element_text(size=30,colour="black")) +
@@ -798,35 +798,22 @@ Combine all plots together
 # x-Achse: Cumulative RA% 
 # y-Achse: SOM[%]
 
-plotRAS <- ggarrange(
+plots <- ggarrange(
     plot_results_RAS_CT_2019, 
     plot_results_RAS_CT_2020, 
     plot_results_RAS_CT_2021, 
-    plot_results_RAS_MP_2019,
-    plot_results_RAS_MP_2020,
-    plot_results_RAS_MP_2021,
-    ncol = 3,
-    nrow=2 
-    )
-
-plotRH <- ggarrange(
     plot_results_RH_CT_2019, 
     plot_results_RH_CT_2020, 
     plot_results_RH_CT_2021, 
+    plot_results_RAS_MP_2019,
+    plot_results_RAS_MP_2020,
+    plot_results_RAS_MP_2021,
     plot_results_RH_MP_2019,
     plot_results_RH_MP_2020,
     plot_results_RH_MP_2021,
-    ncol = 3,
-    nrow=2 
-    )
-
-plots= ggarrange(
-          plotRAS,
-          plotRH,
-          ncol=2,
-          nrow=1,      
-          common.legend=T)
-
+    ncol = 6,
+    nrow=2,
+    common.legend=T)
 
 ```
 ```{r}
