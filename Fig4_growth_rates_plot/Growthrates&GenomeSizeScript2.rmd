@@ -24,230 +24,163 @@ The script follows the analysis for the genome growth rates.
 Because the genome files can not be reuploaded I need to break the scripts
 in two. Thus, in case anyone needs to re-run, you need to load this file 
 ```{r}
-GRfiles=read.csv(file.path("../InputData", "Tillage_GMs_Growth_rates.csv"), check.names=F)
-GRfiles= dcast(Soil_Type+till2+Genome~.,  value.var = "DoublingTime", mean, data=GRfiles)%>%
+GRfiles=read.csv(file.path("../OutputData", "Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv"), check.names=F)
+
+GRfiles= dcast(Soil_Type+till2+Genome+Year~.,  value.var = "DoublingTime", mean, data=GRfiles)%>%
   select(DoublingTime=".", everything())
+GRfiles$Group=GRfiles$Year
+
 
 ```
 
 Create the first plot
 ```{r}
-plist=list()
-for(i in unique(GRfiles$Soil_Type)){
-  file1=filter(GRfiles, Soil_Type==paste0(i))  
-  w1=wilcox.test(file1$DoublingTime~file1$till2)
-  p=data.frame(p= w1$p.value, Soil_Type=paste0(i))
-  plist=rbind(plist, p)
-}
+GRfilesB=GRfiles
+GRfilesB$Group="All Years Together"
+GRfilesC=rbind(GRfilesB,GRfiles)
+GRfilesC$Group=factor(GRfilesC$Group,
+levels = c("All Years Together", "2020",
+           "2021","2019"  ))
 
-GRfiles$lg=log10(GRfiles$DoublingTime)
 
-GRfiles2= dcast(Soil_Type~till2,  value.var = "lg", mean, data=GRfiles)
-GRfiles3= dcast(Soil_Type~.,  value.var = "lg", sd, data=GRfiles)
-GRfiles4=full_join(GRfiles3,GRfiles2)%>%full_join( plist)
-GRfiles4=mutate(GRfiles4, d=(MP-CT)/.)
-GRfiles5=full_join(GRfiles, GRfiles4)
-
-GRfiles5$p2=round(GRfiles5$p,2)
-GRfiles5$p2[GRfiles5$p<0.05]="*"
-GRfiles5$p2[GRfiles5$p<0.01]="**"
-GRfiles5$p2[GRfiles5$p<0.001]="***"
-GRfiles5$p2[GRfiles5$p<0.0001]="****"
-
-GRfiles5$p2[GRfiles5$p>0.05] =""
-
-GRfiles5$Soil_Type=gsub("RAS","BS", GRfiles5$Soil_Type)
-plot1 = ggplot(GRfiles5, 
-  aes( x=lg, fill= paste(till2))) +
-  geom_density(alpha=0.75) +
+plot1 = ggplot(GRfilesC, 
+  aes( y=log10(DoublingTime), x=Group,  fill= paste(till2))) +
+  geom_boxplot(alpha=0.75) +
   facet_wrap(~Soil_Type) +
   scale_fill_brewer(name="",palette = "Dark2") +
   theme_bw() +
-  xlab("Log10 predicted minimal doubling time (hours)") + 
-  ylab("Density") +
+  ylab("Log10 predicted minimal doubling time (hours)") + 
+  xlab("Group") +
   theme(strip.background=element_rect(fill="white",colour="white")) +
-  theme(strip.text=element_text(size=35,colour="black",angle = 0)) +
+  theme(strip.text=element_text(size=15,colour="black",angle = 0)) +
   
-  theme(legend.text=element_text(size=35,colour="black")) + 
-  theme(legend.title=element_text(size=35,colour="black")) + 
+  theme(legend.text=element_text(size=15,colour="black")) + 
+  theme(legend.title=element_text(size=15,colour="black")) + 
   theme(legend.position ="top",
-        axis.text.y=element_text(size=35,colour="black"),
-        axis.title.y=element_text(size=35,colour="black")) + 
+        axis.text.y=element_text(size=15,colour="black"),
+        axis.title.y=element_text(size=15,colour="black")) + 
   theme(legend.key.size=unit(2,"cm")) +
   
-  theme(axis.text.x=element_text(size=35,colour="black")) +
-  theme(axis.title.x=element_text(size=35,colour="black")) +
-  
-  geom_text(x=-0.7, y=6, hjust=0, fill="white", 
-        aes(label = paste0( "Cohen's d = ",round( d,2)," ", p2), 
-        stat="summary"),size=10 ) +
-  ylim(0,6) +
-  geom_vline(aes(xintercept=CT), colour="black", linetype=2) +
-  geom_vline(aes(xintercept=MP), colour="black") + 
-  scale_x_continuous(breaks = c(-0.5, 0, 0.5, 1))
+  theme(axis.text.x=element_text(size=15,colour="black")) +
+  theme(axis.title.x=element_text(size=15,colour="black")) +
+  stat_compare_means(method = "wilcox.test", label = "p.signif",size=8, hide.ns = T)
 
 ```
 
 Create the second plot
 ```{r}
-GRfiles=read.csv(file.path("../InputData", "Tillage_GMs_Growth_rates.csv"), check.names=F)
+sizegenome=read.csv(file.path(
+"../OutputData", "Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv"),
+check.names=F)
 
 ```
-
 ```{r}
-sizegenome=read.delim("../InputData/quality_report.tsv")
-sizegenome$genome=sizegenome$Name
-```
-
-```{r}
-matches2=full_join(GRfiles,sizegenome, by="genome")%>%na.omit()
-matches2$Corrected_size=matches2$Genome_Size+matches2$Genome_Size*((100-matches2$Completeness)/100)
-
-write.csv(matches2, file = file.path("../InputData", "genomesizesummarized_total.csv"))
-
-matches2$till2=matches2$stat
-matches2$till2[matches2$till2>0]="MP"
-matches2$till2[matches2$till2!="MP"]="CT"
-matches2=dcast(matches2,Genome+till2+Soil_Type+stat~., value.var = "Corrected_size",mean)%>%
+matches2=dcast(sizegenome,Soil_Type+till2+Genome+Year~., value.var = "Genome_Size2",mean)%>%
   select(Corrected_size=".", everything())
+
 ```
 
 ```{r}
-plist=list()
-for(i in unique( matches2$Soil_Type)){
-  file1=filter(matches2, Soil_Type==paste0(i))  
-  w1=wilcox.test(file1$Corrected_size~file1$till2)
-  p=data.frame(p= w1$p.value, Soil_Type=paste0(i))
-  plist=rbind(plist, p)
-}
-matches2$till3=ifelse(matches2$till2 == "CT", 0, 1)
-matches2$lg=log10(matches2$Corrected_size)
+matches2$Group=matches2$Year
+GSfilesB=matches2
+GSfilesB$Group="All Years Together"
+GSfilesC=rbind(GSfilesB,matches2)
 
-matches3=dcast(Soil_Type~till2, value.var = "lg", mean, data=matches2)
-matches4=dcast(Soil_Type~., value.var = "lg", sd, data=matches2)
-matches5=full_join(matches4,matches3)%>%full_join(plist)
-matches5=mutate(matches5, d=(MP-CT)/.)
-matches6=full_join(matches5, matches2)
+GSfilesC$Group=factor(GSfilesC$Group,
+levels = c("All Years Together","2021", "2020",
+           "2019"  ))
 
-matches6$p2=round(matches6$p,2)
-matches6$p2[matches6$p>0.05] =""
-matches6$p2[matches6$p<0.0001]="****"
-
-matches6$Soil_Type=gsub("RAS", "BS",matches6$Soil_Type)
-
-plot2= ggplot(matches6, 
-  aes( x=lg, fill= paste(till2))) +
-  geom_density(alpha=0.75) +
-  facet_wrap(~Soil_Type, scales = "fixed") +
+plot2 = ggplot(GSfilesC, 
+  aes( y=log10(Corrected_size),
+       x=Group,  fill= paste(till2))) +
+  geom_boxplot(alpha=0.75) +
+  facet_wrap(~Soil_Type) +
   scale_fill_brewer(name="",palette = "Dark2") +
   theme_bw() +
-  xlab("Log10 genome size (bp)") +
-  ylab("Density") +
+  ylab("Log10 (bp)") + 
+  xlab("Group") +
   theme(strip.background=element_rect(fill="white",colour="white")) +
-  theme(strip.text=element_text(size=35,colour="black",angle = 0)) +
+  theme(strip.text=element_text(size=15,colour="black",angle = 0)) +
   
-  theme(axis.text.x=element_text(size=35,colour="black")) +
-  theme(axis.title.x=element_text(size=35,colour="black")) +
-  
-  theme(legend.text=element_text(size=35,colour="black")) + 
-  theme(legend.title=element_text(size=35,colour="black")) + 
-  theme(legend.position="top",
-        axis.text.y=element_text(size=35,colour="black"),
-        axis.title.y=element_text(size=35,colour="black")) + 
+  theme(legend.text=element_text(size=15,colour="black")) + 
+  theme(legend.title=element_text(size=15,colour="black")) + 
+  theme(legend.position ="top",
+        axis.text.y=element_text(size=15,colour="black"),
+        axis.title.y=element_text(size=15,colour="black")) + 
   theme(legend.key.size=unit(2,"cm")) +
   
-  geom_text(x=6.2, y=6, hjust=0, fill="white", 
-        aes(label=paste0("Cohen's d = ", round(d,2)," ", p2), stat="summary"), size=10) +
-  ylim(0,6) +
-  geom_vline(aes(xintercept=CT), colour="black", linetype=2) +
-  geom_vline(aes(xintercept=MP), colour="black")
+  theme(axis.text.x=element_text(size=15,colour="black")) +
+  theme(axis.title.x=element_text(size=15,colour="black")) +
+  stat_compare_means(method = "wilcox.test", label = "p.signif",size=8, hide.ns = T)
+
 ```  
 
 ```{r}
-cazygenes= read.csv(file = "../InputData/CAZ_enzymes_per_genome.csv")
+cazygenes= read.csv(file.path(
+"../OutputData", "Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv"),
+check.names=F)
+
 
 ```
 Until this part can not be uploaded in the linux server 
 
 ```{r}
+matches2=dcast(cazygenes,Soil_Type+till2+Genome+Year+tax.Phylum+ASV+FC~., value.var = "CazymeGenes",mean)%>%
+  select(CazymeGenes=".", everything())
+```
 
-plist=list()
-for(i in unique( cazygenes$Soil_Type)){
-  file1=filter(cazygenes, Soil_Type==paste0(i))  
-  w1=wilcox.test(file1$Sach_genes~file1$till2)
-  p=data.frame(p= w1$p.value, Soil_Type=paste0(i))
-  plist=rbind(plist, p)
-}
-cazygenes2=cazygenes
+```{r}
+matches2$Group=matches2$Year
+CZfilesB=matches2
+CZfilesB$Group="All Years Together"
+CZfilesC=rbind(CZfilesB,matches2)
 
-cazygenes$till3=ifelse(cazygenes$till2 == "CT", 0, 1)
-cazygenes2$lg=log10(cazygenes$Sach_genes)
+CZfilesC$Group=factor(CZfilesC$Group,
+levels = c("All Years Together", "2020",
+           "2021","2019"  ))
 
-cazygenes3=dcast(Soil_Type~till2,  value.var = "lg", mean, data=cazygenes2)
-cazygenes4=dcast(Soil_Type~.,  value.var = "lg", sd, data=cazygenes2)
-cazygenes5=full_join(cazygenes4,cazygenes3)%>%full_join( plist)
-cazygenes5=mutate(cazygenes5, d=(MP-CT)/.)
-cazygenes6=full_join(cazygenes5, cazygenes2)
-
-cazygenes6$p2=round(cazygenes6$p,2)
-cazygenes6$p2[cazygenes6$p>0.05] =""
-cazygenes6$p2[cazygenes6$p<0.0001]="****"
-
-cazygenes6$Soil_Type=gsub("RAS", "BS",cazygenes6$Soil_Type)
-
-plot3= ggplot(cazygenes6, 
-  aes(x=lg,fill= paste(till2))) +
-  geom_density(alpha=0.75) +
-  facet_wrap(~Soil_Type, scales = "fixed") +
-  scale_fill_brewer(name=" ",palette = "Dark2") +
+plot3 = ggplot(CZfilesC, 
+  aes( y=log10(CazymeGenes),
+       x=Group,  fill= paste(till2))) +
+  geom_boxplot(alpha=0.75) +
+  facet_wrap(~Soil_Type) +
+  scale_fill_brewer(name="",palette = "Dark2") +
   theme_bw() +
-  xlab("Log10 (CAZyme genes/genome)") +
-  ylab("Density") +
+ ylab("Log10 (CAZyme genes/genome)")+
+  xlab("Group") +
   theme(strip.background=element_rect(fill="white",colour="white")) +
-  theme(strip.text=element_text(size=35,colour="black",angle = 0)) +
-  theme(axis.text.x=element_text(size=35,colour="black")) +
-  theme(legend.text=element_text(size=35,colour="black")) + 
-  theme(legend.title=element_text(size=35,colour="black")) + 
-  theme(legend.position="top",
-        axis.text.y=element_text(size=35,colour="black"),
-        axis.title.y=element_text(size=35,colour="black")) + 
-  theme(axis.title.x=element_text(size=35,colour="black")) +
-  theme(legend.key.size = unit(2,"cm")) +
+  theme(strip.text=element_text(size=15,colour="black",angle = 0)) +
   
-  geom_text(x=2.7, y=6, hjust = 0, fill="white", 
-        aes(label=paste0("Cohen's d = ", round(d,2)," ", p2), stat="summary"), size=10) +
-  ylim(0,6) +
-  geom_vline(aes(xintercept=CT), colour="black", linetype=2) +
-  geom_vline(aes(xintercept=MP), colour="black")
+  theme(legend.text=element_text(size=15,colour="black")) + 
+  theme(legend.title=element_text(size=15,colour="black")) + 
+  theme(legend.position ="top",
+        axis.text.y=element_text(size=15,colour="black"),
+        axis.title.y=element_text(size=15,colour="black")) + 
+  theme(legend.key.size=unit(2,"cm")) +
+    theme(axis.text.x=element_text(size=15,colour="black")) +
+  theme(axis.title.x=element_text(size=15,colour="black")) +
+  stat_compare_means(method = "wilcox.test", label = "p.signif",size=8, hide.ns = T)
 
 ```
 Combine plots
 ```{r}
-plots=ggarrange(plot1, plot2, plot3, 
+plots=ggarrange(plot1+
+  coord_flip()+
+    scale_y_reverse(), plot2+
+  coord_flip(), plot3+
+  coord_flip(), 
           labels = c("A)","B)","C)"),
           font.label = list(face="bold", size=35), ncol=1, common.legend = T)
   
 ```
 Save plot
 ```{r}
-png(filename = "GrowthrateGenomeSizePlots.png", height = 9000,
-    width = 7000, res=350)
+png(filename = "GrowthrateGenomeSizePlots.png", height = 5000,
+    width = 6000, res=350)
 print(plots)
 dev.off()
 ```
-Save the output 
-```{r}
-TableS4=select(GRfiles,"ASV",        `Fold-Change/Standard-errors`="stat",    "Soil_Type","Sequence",  Genome="genome",Minimal_Doubling_Time="DoublingTime")%>%
-  full_join(matches2%>%select(Genome,Genome_Size=Corrected_size)%>%
-  mutate(Genome=str_replace(Genome,"_dataset","")))%>%
-  full_join(select( cazygenes6, 
-Genome=genome, CAZy_Gene_no=Sach_genes, Total_Genes=gene_No))
-```
 
 ```{r}
- write.csv(file = file.path("../OutputData", "TableS4_GrowthRates.csv"), TableS4)
-```
-%>% 
-# ```{r}
 print("The End")
 ```

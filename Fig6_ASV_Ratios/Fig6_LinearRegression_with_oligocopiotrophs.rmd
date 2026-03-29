@@ -11,7 +11,7 @@ library(reshape2)
 Load the soil data
 ```{r}
 soil_lab = read.csv(file.path("../InputData", "soil_lab.csv"), check.names=F)
-soil_lab_reduced = soil_lab[, c("Experimental_Year", "Block", "Tillage", "Fertilization", "OM[%]")]
+soil_lab_reduced = soil_lab[, c("Experimental_Year", "Block", "Tillage", "Fertilization", "OM[%]","N[%]")]
 soil_lab_reduced <- soil_lab_reduced %>% dplyr::rename(Year = Experimental_Year)
 soil_lab_reduced <- soil_lab_reduced %>%
   mutate(Block = case_when(
@@ -32,8 +32,8 @@ soil_lab_reduced <- soil_lab_reduced %>%
   ))
 
 soil_lab_reduced <- soil_lab_reduced %>%
-  mutate(Tillage = recode(Tillage, "Plough" = "MP", "Cultivator" = "CT")) %>%
-  mutate(Fertilization = recode(Fertilization, "extensive" = "Ext", "intensive" = "Int")) %>% 
+  mutate(Tillage = dplyr::recode(Tillage, "Plough" = "MP", "Cultivator" = "CT")) %>%
+  mutate(Fertilization = dplyr::recode(Fertilization, "extensive" = "Ext", "intensive" = "Int")) %>% 
   dplyr::rename("OM" = "OM[%]")
 
 ```
@@ -46,27 +46,30 @@ metadata=read.csv(file.path("../InputData", "metadata1.csv"))%>%na.omit()
 
 Create the Sequencer metadata based on the sample name
 ```{r}
-metadata$sequencer=metadata$Year
-metadata$sequencer[metadata$sequencer==2019]="miseq"
-metadata$sequencer[metadata$sequencer!="miseq"]="novaseq"
-metadata$ID=metadata$Sample
-GRfiles=read.csv(file.path("../InputData", "Tillage_GMs_Growth_rates.csv"))
-GRfiles=dcast(GRfiles,ASV+Soil_Type+stat~.,value.var = "DoublingTime", median)
+GRfiles=read.csv(file.path("../OutputData", "All_Growth_Rates_for_All_mapped_ASVs.csv"))
+GRfiles$ASV=GRfiles$V1
+GRfiles=dcast(GRfiles,ASV~.,value.var = "DoublingTime", mean)
 ```
 Generate a distribution plot of the growth rates to select the best
 division point for slow and fast growing taxa.
 ```{r}
-GRfiles <- GRfiles %>%
-  mutate(Soil_Type = recode(Soil_Type, "RAS" = "BS"))
-
 library(RColorBrewer)
-palette_colors<-brewer.pal(n=8,name="Dark2")
+```
 
+```{r}
+GRfiles$Trait=GRfiles$.
+limit=median((GRfiles$.))
+GRfiles$Trait[GRfiles$.>=limit]="slow_grower"
+GRfiles$Trait[GRfiles$.<limit]="fast_grower"
+
+```
+
+```{r}
 distributionplot= ggplot(GRfiles,aes(x=log10(.),fill=Soil_Type)) +
   theme_bw() + 
-  geom_density(alpha=0.5) +
+  geom_density(alpha=0.5, fill="skyblue4") +
   ylab("Density") +
-  xlab("Log10 predicted minimal doubling time (hours) for CT-/MP-responders\nbased on minimal predicted values of mapped genomes") +
+  xlab("Log10 mDbTs (hours) for all ASVs mapped to different genomes") +
   
   theme(strip.background=element_rect(fill="white",colour="black")) +
   theme(strip.text=element_text(size=25,colour="black")) +
@@ -80,212 +83,65 @@ distributionplot= ggplot(GRfiles,aes(x=log10(.),fill=Soil_Type)) +
   theme(legend.position="top",axis.title.y=element_text(size=25,colour="black")) + 
   theme(legend.key.size=unit(2,"cm")) +
   
-  geom_vline(aes(xintercept=log10(2.5)),colour="black",linetype="dashed") + 
-  geom_vline(aes(xintercept=log10(5)),colour="black",linetype="dashed") + 
-  geom_vline(aes(xintercept=log10(1.5)),colour="black",linetype="dashed") +
-  
-  scale_fill_manual(name = "", values = c("BS" = palette_colors[3], "RH" = palette_colors[6]))
+  geom_vline(aes(xintercept=(median(log10(GRfiles$.)))),colour="black",linetype="dashed") 
+
 ```
 
-```{r}
-GRfiles$Trait=GRfiles$.
-GRfiles$Trait[GRfiles$.>2.5]="slow_grower"
-GRfiles$Trait[GRfiles$.<=2.5]="fast_grower"
-```
 
-Read the differential abundances 
+
+Load the abundances 
 ```{r,  results="hide"}
 ASVtaxonomy=read.csv(file.path("../InputData", "16SMLERarefied_table.csv"),row.names = "X") %>%
   t() %>%
   as.data.frame() %>%
   rownames_to_column(var="ASV")
-
-all_mixed_models_diff=read.csv(file.path("../InputData", "ALL_LLM_testing_with_taxonomy.csv"))
-bac_rer_number=unique(colSums( ASVtaxonomy[,-1]))
 ```
 Calculate the ratio of ASVs related to fast and slow growing bacteria in 
 every sample
 ```{r}
-all_mixed_models_diff_Ratio_RAS=filter(GRfiles, Soil_Type=="BS")%>%select(ASV, Trait)
 ASVtaxonomy_Ratio_RAS=filter(ASVtaxonomy, 
-    ASV%in%c(all_mixed_models_diff_Ratio_RAS$ASV))%>%
+    ASV%in%c(GRfiles$ASV))%>%
   gather(-ASV, key="Sample",value="RA")%>% filter(Sample%in%c(unique(metadata$Sample)))%>%
   
     full_join(metadata) %>%
 select(Fertilization=Int, everything()) %>%
-  filter(Soil_Type=="RAS") %>%
 
-full_join(all_mixed_models_diff_Ratio_RAS)%>%filter(RA!="NA")
+full_join(GRfiles)%>%filter(RA!="NA")
 
 ASVtaxonomy_Ratio_RAS$Block=as.character(ASVtaxonomy_Ratio_RAS$Block)
 
-RAS_Ratio_data16S <- full_join(soil_lab_reduced, ASVtaxonomy_Ratio_RAS, 
+RAS_RH_Ratio_data16S <- full_join(soil_lab_reduced, ASVtaxonomy_Ratio_RAS, 
                          by = c("Year", "Tillage", "Fertilization", "Block"))%>%
   filter(RA!="NA")
-RAS_Ratio_data16S2=dcast(RAS_Ratio_data16S, 
-OM+Sample+Tillage+Fertilization+sequencer+Year~Trait,
+RAS_RH_Ratio_data16S2=dcast(RAS_RH_Ratio_data16S, 
+OM+Sample+Tillage+Fertilization+Year+Soil_Type~Trait,
 value.var = "RA",sum)
 
-RAS_Ratio_data16S2$Ratio=log10((
-RAS_Ratio_data16S2$slow_grower+1)/(RAS_Ratio_data16S2$fast_grower+1))
+RAS_RH_Ratio_data16S2$Ratio=((
+RAS_RH_Ratio_data16S2$fast_grower+1)/(RAS_RH_Ratio_data16S2$slow_grower+1))
+RAS_RH_Ratio_data16S2$Soil_Type[RAS_RH_Ratio_data16S2$Soil_Type=="RAS"]="BS"
 ```
-root-associated soil
+Ratios
 ```{r}
-all_mixed_models_diff_Ratio_RH=filter(GRfiles, Soil_Type=="RH")%>%select(ASV, Trait)
-
-ASVtaxonomy_Ratio_RH=filter(ASVtaxonomy, ASV%in%c(all_mixed_models_diff_Ratio_RH$ASV))%>%
-  gather(-ASV, key="Sample",value="RA")%>% filter(Sample%in%c(unique(metadata$Sample)))%>%
-  
-    full_join(metadata) %>%
-select(Fertilization=Int, everything()) %>%
-  filter(Soil_Type=="RH") %>%
-
-full_join(all_mixed_models_diff_Ratio_RH)%>%filter(RA!="NA")
-
-ASVtaxonomy_Ratio_RH$Block=as.character(ASVtaxonomy_Ratio_RH$Block)
-
-RH_Ratio_data16S <- full_join(soil_lab_reduced, ASVtaxonomy_Ratio_RH, 
-                         by = c("Year", "Tillage", "Fertilization", "Block"))%>%filter(RA!="NA")
-RH_Ratio_data16S2=dcast(RH_Ratio_data16S, 
-OM+Sample+Tillage+Fertilization+sequencer+Year~Trait, value.var = "RA",
-sum)
-
-RH_Ratio_data16S2$Ratio=log10((
-RH_Ratio_data16S2$slow_grower+1)/(RH_Ratio_data16S2$fast_grower+1))
-```
-
-```{r}
-ras_memodel1 <- lme4::lmer(scale(OM)~scale(Ratio)  + (1|Year:sequencer), data = RAS_Ratio_data16S2)
-#Apply Bootstrap for inferring p-values and 95% CI
-boot.out = bootMer(ras_memodel1, fixef, seed=11122022, nsim=10000, parallel = "multicore", ncpus = 25) 
-print("Boot  finished")
-  
-CI.lower = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.025, na.rm=TRUE)))
-CI.upper = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.975, na.rm=TRUE)))
-results_df = as.data.frame(summary(boot.out))
-p = rbind(
-    (1-apply(boot.out$t<0, 2, mean))*2,
-    (1-apply(boot.out$t>0, 2, mean))*2)
-RAS_pvalues1=data.frame(pval= apply(p, 2, min))
-
-ras_memodel1 <- lme4::lmer(scale(OM)~scale(Ratio)  + (1|Year), data = RAS_Ratio_data16S2)
-#Apply Bootstrap for inferring p-values and 95% CI
-boot.out = bootMer(ras_memodel1, fixef, seed=11122022, nsim=10000, parallel = "multicore", ncpus = 25) 
-print("Boot  finished")
-  
-CI.lower = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.025, na.rm=TRUE)))
-CI.upper = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.975, na.rm=TRUE)))
-results_df = as.data.frame(summary(boot.out))
-p = rbind(
-    (1-apply(boot.out$t<0, 2, mean))*2,
-    (1-apply(boot.out$t>0, 2, mean))*2)
-RAS_pvalues1=data.frame(pval= apply(p, 2, min))
-
-results_df_RAS_reg=data.frame( regmedian=results_df$bootMed[2],regupper=CI.upper[2],
-reglower=CI.lower[2], reg_p= RAS_pvalues1$pval[2], Soil_Type="RAS")
-
-```
-
-
-```{r}
-RAS_Ratio_data16S2$till2=RAS_Ratio_data16S2$Tillage
-RAS_Ratio_data16S2$till2[RAS_Ratio_data16S2$till2=="CT"]=0
-RAS_Ratio_data16S2$till2[RAS_Ratio_data16S2$till2=="MP"]=1
-RAS_Ratio_data16S2$till2=as.numeric(RAS_Ratio_data16S2$till2)
-
-ras_memodel2 <- lme4::lmer(scale(Ratio)~till2  + (1|Year:sequencer), data = RAS_Ratio_data16S2)
-#Apply Bootstrap for inferring p-values and 95% CI
-boot.out = bootMer(ras_memodel2, fixef, seed=11122022, nsim=10000, parallel = "multicore", ncpus = 25) 
-print("Boot  finished")
-  
-CI.lower = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.025, na.rm=TRUE)))
-CI.upper = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.975, na.rm=TRUE)))
-results_df = as.data.frame(summary(boot.out))
-p = rbind(
-    (1-apply(boot.out$t<0, 2, mean))*2,
-    (1-apply(boot.out$t>0, 2, mean))*2)
-RAS_pvalues2=data.frame(pval= apply(p, 2, min))
-results_df_RAS_diff=data.frame(median=results_df$bootMed[2],diffupper=CI.upper[2],
-difflower=CI.lower[2], p= RAS_pvalues2$pval[2], Soil_Type="RAS")
-
-
-```
-
-
-```{r}
-RH_memodel1 <- lme4::lmer(scale(OM)~scale(Ratio)  + (1|Year:sequencer), data = RH_Ratio_data16S2)
-#Apply Bootstrap for inferring p-values and 95% CI
-boot.out = bootMer(RH_memodel1, fixef, seed=11122022, nsim=10000, parallel = "multicore", ncpus = 25) 
-print("Boot  finished")
-  
-CI.lower = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.025, na.rm=TRUE)))
-CI.upper = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.975, na.rm=TRUE)))
-results_df = as.data.frame(summary(boot.out))
-p = rbind(
-    (1-apply(boot.out$t<0, 2, mean))*2,
-    (1-apply(boot.out$t>0, 2, mean))*2)
-RH_pvalues1=data.frame(pval= apply(p, 2, min))
-
-RH_memodel1 <- lme4::lmer(scale(OM)~scale(Ratio)  + (1|Year), data = RH_Ratio_data16S2)
-#Apply Bootstrap for inferring p-values and 95% CI
-boot.out = bootMer(RH_memodel1, fixef, seed=11122022, nsim=10000, parallel = "multicore", ncpus = 25) 
-print("Boot  finished")
-  
-CI.lower = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.025, na.rm=TRUE)))
-CI.upper = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.975, na.rm=TRUE)))
-results_df = as.data.frame(summary(boot.out))
-p = rbind(
-    (1-apply(boot.out$t<0, 2, mean))*2,
-    (1-apply(boot.out$t>0, 2, mean))*2)
-RH_pvalues1=data.frame(pval= apply(p, 2, min))
-
-
-results_df_RH_reg=data.frame( regmedian=results_df$bootMed[2],regupper=CI.upper[2],
-reglower=CI.lower[2], reg_p= RH_pvalues1$pval[2], Soil_Type="RH")
-```
-
-
-
-```{r}
-RH_Ratio_data16S2$till2=RH_Ratio_data16S2$Tillage
-RH_Ratio_data16S2$till2[RH_Ratio_data16S2$till2=="CT"]=0
-RH_Ratio_data16S2$till2[RH_Ratio_data16S2$till2=="MP"]=1
-RH_Ratio_data16S2$till2=as.numeric(RH_Ratio_data16S2$till2)
-
-RH_memodel2 <- lme4::lmer(scale(Ratio)~till2  + (1|Year:sequencer), data = RH_Ratio_data16S2)
-#Apply Bootstrap for inferring p-values and 95% CI
-boot.out = bootMer(RH_memodel2, fixef, seed=11122022, nsim=10000, parallel = "multicore", ncpus = 25) 
-print("Boot  finished")
-  
-CI.lower = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.025, na.rm=TRUE)))
-CI.upper = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.975, na.rm=TRUE)))
-results_df = as.data.frame(summary(boot.out))
-p = rbind(
-    (1-apply(boot.out$t<0, 2, mean))*2,
-    (1-apply(boot.out$t>0, 2, mean))*2)
-
-RH_pvalues2=data.frame(pval= apply(p, 2, min))
-results_df_RH_diff=data.frame( median=results_df$bootMed[2],diffupper=CI.upper[2],
-difflower=CI.lower[2], p= RH_pvalues2$pval[2], Soil_Type="RH")
-```
-
-
-```{r}
-combined_dataframe= full_join( rbind(results_df_RH_diff,results_df_RAS_diff),
-rbind(results_df_RH_reg,results_df_RAS_reg))
- RAS_Ratio_df= rbind( RAS_Ratio_data16S2%>%mutate(Soil_Type="RAS"), 
-RH_Ratio_data16S2%>%mutate(Soil_Type="RH"))%>%
-   full_join(combined_dataframe)
-```
-
-Change the RAS to BS (Bulk-Soil) to have harmonized terms
-```{r}
-RAS_Ratio_df$Soil_Type[RAS_Ratio_df$Soil_Type=="RAS"]="BS"
-```
-Generate the mixed effect plots
-```{r}
+RAS_RH_Ratio_data16S2$G=paste0(RAS_RH_Ratio_data16S2$Soil_Type,RAS_RH_Ratio_data16S2$Tillage)
+dunns= dunn.test::dunn.test(RAS_RH_Ratio_data16S2$Ratio, RAS_RH_Ratio_data16S2$G, method = "BH")
+comparisons=data.frame(comparisons=dunns$comparisons, p=dunns$P.adjusted)%>%
+  separate(., "comparisons", into = c("row","col"), sep = " - ")
+orderlist= aggregate( RAS_RH_Ratio_data16S2, Ratio~G, mean)
+comparisons=full_join(comparisons, orderlist%>%mutate(row=G), by="row")%>%
+  na.omit()
+comparisons=comparisons[order(comparisons$Ratio, decreasing = T),]
+names1=paste0(comparisons$row,"-", comparisons$col)
+p=comparisons$p
+names(p)=names1
+letters=  multcompView::multcompLetters(p,  
+compare = "<", reversed =F)$Letters%>%as.data.frame()
+colnames(letters)="L1"
+letters$G=rownames(letters)
+RAS_RH_Ratio_data16S3=full_join(RAS_RH_Ratio_data16S2,letters)
+RAS_RH_Ratio_data16S3$equal=" "
 plotdiff=
-ggplot(RAS_Ratio_df, 
+ggplot(RAS_RH_Ratio_data16S3, 
   aes(x=Soil_Type, y=Ratio,  fill= paste(Tillage))) +
   geom_jitter(shape=21, size=2, position = position_jitterdodge(jitter.width =0.25,dodge.width = 1)) +
   geom_boxplot(alpha=0.5, position = position_dodge(width = 1)) +
@@ -293,7 +149,7 @@ ggplot(RAS_Ratio_df,
   scale_fill_brewer(name="",palette = "Dark2") +
   theme_bw() +
   xlab("") +
-  ylab("Log10 slow-/fast-growing bacterial taxa") +
+  ylab("Ratio fast-/slow-growing bacterial ASVs") +
   theme(strip.background=element_rect(fill="white",colour="white")) +
   theme(strip.text=element_text(size=25,colour="black",angle = 0)) +
   
@@ -304,25 +160,73 @@ ggplot(RAS_Ratio_df,
   theme(legend.title=element_text(size=25,colour="black")) + 
   theme(legend.position="top",
         axis.text.y=element_text(size=25,colour="black"),
-        axis.title.y=element_text(size=25,colour="black")
-        ) + 
+        axis.title.y=element_text(size=25,colour="black")) + 
   theme(legend.key.size=unit(2,"cm")) +
-  geom_richtext(y=0.6,aes(label=paste0("LMM: β1 = ", round(median,2)," [", round(diffupper,2),", ",round(difflower,2),"], <i>p</i>",ifelse(p == 0, " < 0.0001", paste0(" = ", round(p, 4)))), stat="summary"), size=8, fill=NA, label.color=NA) +
-  ylim(-0.4, 0.6)
+    geom_text(stat = "summary", 
+aes(y=Ratio+0.5, label=L1), size=9, position = position_dodge(width = 1)) +
+theme(legend.position = "right")+facet_wrap(~equal)
 
 
-plotdreg=
-ggplot(RAS_Ratio_df, 
-  aes(x=(OM),y=Ratio,fill=as.factor(Year))) +
-  geom_point(shape=21) +
-  geom_smooth(method="lm") +
-  
-  scale_fill_brewer(name="",palette="Set1") +
+```
+
+```{r}
+plotcor=
+ggplot(RAS_RH_Ratio_data16S2, 
+  aes(x=OM, y=Ratio,  fill= paste(Tillage))) +
+  geom_point(shape=21, size=2, position = position_jitterdodge(jitter.width =0.25,dodge.width = 1)) +
+  geom_smooth(method = "lm")+
+  scale_fill_brewer(name="",palette = "Dark2") +
   theme_bw() +
-  xlab("Log10 SOM") +
-  ylab("Log10 slow-/fast-growing bacterial taxa") +
+  xlab("SOM") +
+  ylab("Ratio of fast-/slow-growing bacterial ASVs") +
   theme(strip.background=element_rect(fill="white",colour="white")) +
-  theme(strip.text=element_text(size=25,colour="black",angle=0)) +
+  theme(strip.text=element_text(size=25,colour="black",angle = 0)) +
+  
+  theme(axis.text.x=element_text(size=25,colour="black")) +
+  theme(axis.title.x=element_text(size=25,colour="black")) +
+  
+  theme(legend.text=element_text(size=25,colour="black")) + 
+  theme(legend.title=element_text(size=25,colour="black")) + 
+  theme(legend.position="right",
+        axis.text.y=element_text(size=25,colour="black"),
+        axis.title.y=element_text(size=25,colour="black")) + 
+  theme(legend.key.size=unit(2,"cm")) +stat_cor(method = "spearman", aes(colour = Tillage),size=5, cor.coef.name="ρ")+
+  scale_color_brewer(palette = "Dark2", name="")+
+  facet_wrap(~Soil_Type)
+plots1=ggarrange(plotdiff,plotcor, common.legend = T, legend = "top")
+```
+
+Fast_grower bacterial ASVs
+```{r}
+RAS_RH_Ratio_data16S2$G=paste0(RAS_RH_Ratio_data16S2$Soil_Type,RAS_RH_Ratio_data16S2$Tillage)
+dunns= dunn.test::dunn.test(RAS_RH_Ratio_data16S2$fast_grower, RAS_RH_Ratio_data16S2$G, method = "BH")
+comparisons=data.frame(comparisons=dunns$comparisons, p=dunns$P.adjusted)%>%
+  separate(., "comparisons", into = c("row","col"), sep = " - ")
+orderlist= aggregate( RAS_RH_Ratio_data16S2, fast_grower~G, mean)
+comparisons=full_join(comparisons, orderlist%>%mutate(row=G), by="row")%>%
+  na.omit()
+comparisons=comparisons[order(comparisons$fast_grower, decreasing = T),]
+names1=paste0(comparisons$row,"-", comparisons$col)
+p=comparisons$p
+names(p)=names1
+letters=  multcompView::multcompLetters(p,  
+compare = "<", reversed =F)$Letters%>%as.data.frame()
+colnames(letters)="L1"
+letters$G=rownames(letters)
+RAS_RH_Ratio_data16S4=full_join(RAS_RH_Ratio_data16S2,letters)
+RAS_RH_Ratio_data16S4$equal=" "
+plotdiff_fast_growers=
+ggplot(RAS_RH_Ratio_data16S4, 
+  aes(x=Soil_Type, y=log10(100*fast_grower/15349),  fill= paste(Tillage))) +
+  geom_jitter(shape=21, size=2, position = position_jitterdodge(jitter.width =0.25,dodge.width = 1)) +
+  geom_boxplot(alpha=0.5, position = position_dodge(width = 1)) +
+  
+  scale_fill_brewer(name="",palette = "Dark2") +
+  theme_bw() +
+  xlab("") +
+  ylab("Log10 RA[%] of fast-growing bacterial ASVs") +
+  theme(strip.background=element_rect(fill="white",colour="white")) +
+  theme(strip.text=element_text(size=25,colour="black",angle = 0)) +
   
   theme(axis.text.x=element_text(size=25,colour="black")) +
   theme(axis.title.x=element_text(size=25,colour="black")) +
@@ -332,37 +236,122 @@ ggplot(RAS_Ratio_df,
   theme(legend.position="top",
         axis.text.y=element_text(size=25,colour="black"),
         axis.title.y=element_text(size=25,colour="black")) + 
-  facet_wrap(~Soil_Type) +
-  theme(legend.key.size=unit(2,"cm"))+
-    geom_richtext(y=0.6, x=3.5,
-        aes(label=paste0("LMM: β1 = ", round(regmedian,2)," [", 
-round(regupper,2),", ",round(reglower,2),"], <i>p</i> = ", round(reg_p,4)), stat="summary"), size=8, fill=NA, label.color=NA) +
-  ylim(-0.4, 0.6) +  
-  xlim(2.3, 4.35)
-
-
-
+  theme(legend.key.size=unit(2,"cm")) +
+    geom_text(stat = "summary", 
+aes(y=log10(100*fast_grower/15349)+0.3, label=L1), size=9, position = position_dodge(width = 1)) +
+theme(legend.position = "right")+facet_wrap(~equal)
 ```
-combine plots 
+
 ```{r}
-plots=ggarrange(distributionplot, plotdreg, plotdiff, 
-  labels=c("A)","B)","C)"),
-  font.label=list(face="bold",size=25), 
-  ncol=1, 
-  nrow=3
-  )
+plotcor_fast_growers=
+ggplot(RAS_RH_Ratio_data16S2, 
+  aes(x=OM, y=log10(100*fast_grower/15349),  fill= paste(Tillage))) +
+  geom_point(shape=21, size=2, position = position_jitterdodge(jitter.width =0.25,dodge.width = 1)) +
+  geom_smooth(method = "lm")+
+  scale_fill_brewer(name="",palette = "Dark2") +
+  theme_bw() +
+  xlab("SOM") +
+  ylab("Log10 RA[%] of fast-growing bacterial ASVs") +
+  theme(strip.background=element_rect(fill="white",colour="white")) +
+  theme(strip.text=element_text(size=25,colour="black",angle = 0)) +
+  
+  theme(axis.text.x=element_text(size=25,colour="black")) +
+  theme(axis.title.x=element_text(size=25,colour="black")) +
+  
+  theme(legend.text=element_text(size=25,colour="black")) + 
+  theme(legend.title=element_text(size=25,colour="black")) + 
+  theme(legend.position="right",
+        axis.text.y=element_text(size=25,colour="black"),
+        axis.title.y=element_text(size=25,colour="black")) + 
+  theme(legend.key.size=unit(2,"cm")) +stat_cor(method = "spearman", aes(colour = Tillage),size=5, cor.coef.name="ρ", label.x = 2.0)+
+  scale_color_brewer(palette = "Dark2", name="")+
+  facet_wrap(~Soil_Type)
+plots2=ggarrange(plotdiff_fast_growers,plotcor_fast_growers, common.legend = T, legend = "top")
+
 ```
-Save the plot
+
+
+slow_grower bacterial ASVs
+```{r}
+RAS_RH_Ratio_data16S2$G=paste0(RAS_RH_Ratio_data16S2$Soil_Type,RAS_RH_Ratio_data16S2$Tillage)
+dunns= dunn.test::dunn.test(RAS_RH_Ratio_data16S2$slow_grower, RAS_RH_Ratio_data16S2$G, method = "BH")
+comparisons=data.frame(comparisons=dunns$comparisons, p=dunns$P.adjusted)%>%
+  separate(., "comparisons", into = c("row","col"), sep = " - ")
+orderlist= aggregate( RAS_RH_Ratio_data16S2, slow_grower~G, mean)
+comparisons=full_join(comparisons, orderlist%>%mutate(row=G), by="row")%>%
+  na.omit()
+comparisons=comparisons[order(comparisons$slow_grower, decreasing = T),]
+names1=paste0(comparisons$row,"-", comparisons$col)
+p=comparisons$p
+names(p)=names1
+letters=  multcompView::multcompLetters(p,  
+compare = "<", reversed =F)$Letters%>%as.data.frame()
+colnames(letters)="L1"
+letters$G=rownames(letters)
+RAS_RH_Ratio_data16S4=full_join(RAS_RH_Ratio_data16S2,letters)
+RAS_RH_Ratio_data16S4$equal=" "
+plotdiff_slow_growers=
+ggplot(RAS_RH_Ratio_data16S4, 
+  aes(x=Soil_Type, y=log10(100*slow_grower/15349),  fill= paste(Tillage))) +
+  geom_jitter(shape=21, size=2, position = position_jitterdodge(jitter.width =0.25,dodge.width = 1)) +
+  geom_boxplot(alpha=0.5, position = position_dodge(width = 1)) +
+  
+  scale_fill_brewer(name="",palette = "Dark2") +
+  theme_bw() +
+  xlab("") +
+  ylab("Log10 RA[%] of slow-growing bacterial ASVs") +
+  theme(strip.background=element_rect(fill="white",colour="white")) +
+  theme(strip.text=element_text(size=25,colour="black",angle = 0)) +
+  
+  theme(axis.text.x=element_text(size=25,colour="black")) +
+  theme(axis.title.x=element_text(size=25,colour="black")) +
+  
+  theme(legend.text=element_text(size=25,colour="black")) + 
+  theme(legend.title=element_text(size=25,colour="black")) + 
+  theme(legend.position="top",
+        axis.text.y=element_text(size=25,colour="black"),
+        axis.title.y=element_text(size=25,colour="black")) + 
+  theme(legend.key.size=unit(2,"cm")) +
+    geom_text(stat = "summary", 
+aes(y=log10(100*slow_grower/15349)+0.3, label=L1), size=9, position = position_dodge(width = 1)) +
+theme(legend.position = "right")+facet_wrap(~equal)
+```
+
+```{r}
+plotcor_slow_growers=
+ggplot(RAS_RH_Ratio_data16S2, 
+  aes(x=OM, y=log10(100*slow_grower/15349),  fill= paste(Tillage))) +
+  geom_point(shape=21, size=2, position = position_jitterdodge(jitter.width =0.25,dodge.width = 1)) +
+  geom_smooth(method = "lm")+
+  scale_fill_brewer(name="",palette = "Dark2") +
+  theme_bw() +
+  xlab("SOM") +
+  ylab("Log10 RA[%] of slow-growing bacterial ASVs") +
+  theme(strip.background=element_rect(fill="white",colour="white")) +
+  theme(strip.text=element_text(size=25,colour="black",angle = 0)) +
+  
+  theme(axis.text.x=element_text(size=25,colour="black")) +
+  theme(axis.title.x=element_text(size=25,colour="black")) +
+  
+  theme(legend.text=element_text(size=25,colour="black")) + 
+  theme(legend.title=element_text(size=25,colour="black")) + 
+  theme(legend.position="right",
+        axis.text.y=element_text(size=25,colour="black"),
+        axis.title.y=element_text(size=25,colour="black")) + 
+  theme(legend.key.size=unit(2,"cm")) +stat_cor(method = "spearman", aes(colour = Tillage),size=5, cor.coef.name="ρ", label.x = 2.0)+
+  scale_color_brewer(palette = "Dark2", name="")+
+  facet_wrap(~Soil_Type)
+plots3=ggarrange(plotdiff_slow_growers,plotcor_slow_growers, common.legend = T, legend = "top")
+
+```
 ```{r}
 png(filename="Figure6.png",
-      height = 9000,
-      width = 7000, 
-      res=350
+      height = 2000,
+      width = 4000, 
+      res=250
     )
-print(plots)
+print(plots1)
 dev.off()
 ```
-
 ```{r}
-print("The end!")
 ```

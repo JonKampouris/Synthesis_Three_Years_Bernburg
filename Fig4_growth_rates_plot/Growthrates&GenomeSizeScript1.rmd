@@ -25,18 +25,6 @@ library(gRodon)
 library(introdataviz)
 ```
 
-```{r,  results="hide"}
-setwd( "/home/ioannis.kampouris/Intensified_Agriculture_Three_Years")
-all_mixed_models_diff=read.csv(file="TableS1_Bacterial_Responders/ALL_LLM_testing_with_taxonomy.csv")
-
-all_mixed_models_diff2=dcast(all_mixed_models_diff, ASV+Sequence~., length)
-all_mixed_models_seq=DNAStringSet(all_mixed_models_diff2$Sequence)
-names(all_mixed_models_seq)=all_mixed_models_diff2$ASV
-Biostrings::writeXStringSet(all_mixed_models_seq,
-                            filepath = "16S_ASVdada2/ASVs.diff_ab_ASVs.fa", format = 'fasta')
-input1= dcast(all_mixed_models_diff, ASV+Sequence~., value.var = "ASV", length)
-#isolates_functions_and_sequence=read.csv(file="isolates_passed_functions.csv")
-```
 wget https://data.gtdb.ecogenomic.org/releases/release202/202.0/genomic_files_reps/bac120_ssu_reps_r202.tar.gz
 tar -xzf bac120_ssu_reps_r202.tar.gz
 usearch -makeudb_usearch *.fna -output db.udb
@@ -54,20 +42,16 @@ directory if you want to run the code from the next parts.
 
 
 ```{r,  results="hide"}
-setwd( "/home/ioannis.kampouris/MLE_16S")
 
-matches= read.delim(file =  "16S_ASVdada2/ASV_GTDB.mapped_global.txt", header = F)
+
+matches= read.delim(file =  "../16S_ASVdada2/ASV_GTDB.mapped_global.txt", header = F)
 matches$codname=gsub(" d_*.*","", matches$V2)
-write.table(matches$genome, file =  "genomes/listgenomes.txt", 
-            row.names = F, quote=F)
-matches$genome=paste0( gsub("RS_","", gsub("GB_","", matches$codname)))
-paths= read.table(file =  "16S_ASVdada2/info_path.tsv")
-colnames(paths)=c("genome1", "path")
-paths$genome=paste0( gsub(".._genomic.fna.gz","", paths$genome1),".1")
-selectedpaths= full_join(select(matches, genome, ASV=V1), paths )%>%
-  filter(ASV!="NA")
 
-write.csv("16S_ASVdada2/codenames.txt")
+matches$genome=paste0( gsub("RS_","", gsub("GB_","", matches$codname)))
+write.table(unique( matches$genome), file =  "../OutputData/codenames.txt", 
+            row.names = F, quote=F)
+all_models_dif=read.csv("../OutputData/TableS3_RespondersPlot.csv_revised")
+
 ```
 
 **Download the genomes**
@@ -79,6 +63,13 @@ while read i;
   datasets download genome accession "$i" --filename "$i"_dataset.zip
      
 done <"$filename"
+ 
+***Run in Bash***
+***Find the NCBI datasets and save the files in a location***
+
+find . -name "*.zip" -exec unzip -o {} -d  \;
+genome size command :
+ checkm2 predict  --input repo1 -o size1 --threads 20 -x fasta
  
 
 **Run PROKKA**
@@ -96,35 +87,75 @@ while read i;
 done
 
 ```{r, warning=FALSE}
-setwd( "/home/ioannis.kampouris/MLE_16S")
-path="/home/ioannis.kampouris/MLE_16S/genomes/unzipped/prok1"
-list1=list.files(path, pattern="*/*ffn", recursive = TRUE)
-pdlist=list()
+path="/vol/IDK3/MS7_new/MS7_all_prokka_files"
+list1=list.files(path, pattern="*ffn", recursive = TRUE)
+
 all_pds=function(x) {
+
 path_to_genome <- paste0(path, "/",list1[x])
-genes <- readDNAStringSet(path_to_genome)
+genes <- Biostrings::readDNAStringSet(path_to_genome)
 
 #Search for genes annotated as ribosomal proteins
 highly_expressed <- grepl("ribosomal protein",names(genes),ignore.case = T)
-pd1= predictGrowth(genes, highly_expressed, mode="partial")
+pd1= gRodon::predictGrowth(genes, highly_expressed, mode="partial")
 pd2=pd1$d
 pd3=data.frame(G1=paste0(list1[x]), DoublingTime=pd2)
 return(pd3)
 }
-results  =mclapply(1:length(list1), function(x)  all_pds(x), mc.cores = 30)
+results <- mclapply( 1:length(list1), function(x) all_pds(x), mc.cores = 24)
 results2=do.call("rbind",results)%>%separate(., col=G1, into=c("Genome","PR"),
-                                             sep="/")%>%
-  mutate(genome=str_replace(Genome, "_dataset",""))
+                                             sep="_prokka")%>%
+  mutate(genome=str_replace(Genome,"_G.*", ""))
 matches2=full_join(matches, results2) 
-matches3=na.omit(matches2)
-matches4=filter(matches2, !genome%in%c(matches3$genome))
-matches5=full_join( all_mixed_models_diff, 
-select(matches3, ASV=V1, everything()))
-matches5$till2=matches5$stat
+matches3=filter(matches2, DoublingTime!="NA")
+
+
+
+write.csv(file = "../OutputData/All_Growth_Rates_for_All_mapped_ASVs.csv",
+          matches3)
+
+```
+
+```{r}
+path="/vol/IDK3/MS7_new/MS7_all_dbcan_files"
+list1=list.files(path, pattern="*txt", recursive = TRUE)
+
+all_dbcans=function(x) {
+
+path_to_genome <- paste0(path, "/",list1[x])
+if (file.info(path_to_genome)$size>0){
+
+file1=read.delim(path_to_genome, header = F)
+
+file2=data.frame(G1=paste0(list1[x]), CazymeGenes=nrow(file1))}else{
+  file2=data.frame(G1=paste0(list1[x]), CazymeGenes=0)
+}
+return(file2)
+}
+
+resultscazy <- mclapply( 1:length(list1), function(x) all_dbcans(x), mc.cores = 24)
+results2cazy=do.call("rbind",resultscazy)%>%separate(., col=G1, into=c("Genome","PR"),
+                                             sep="_prokka")%>%
+  mutate(genome=str_replace(Genome,"_G.*", ""))%>%
+    select(genome, CazymeGenes)
+
+genome_size=read.delim("/vol/IDK3/MS7_new/genomesizecheckM2.tsv")%>%
+  select(Genome=Name, Genome_Size,Completeness, Contamination)%>%
+  mutate(genome=str_replace(Genome,"_G.*", ""))%>%
+    select(genome, Genome_Size,Completeness, Contamination)
+genome_size$Genome_Size2=genome_size$Genome_Size+(1-genome_size$Completeness/100)*genome_size$Genome_Size-(genome_size$Contamination/100)*genome_size$Genome_Size
+
+matches3B=full_join(results2cazy, matches3)
+matches3C=full_join(genome_size, matches3B)
+
+matches5=full_join( all_models_dif, 
+select(matches3C, ASV=V1, everything()))
+matches5$till2=matches5$coeff
 matches5$till2[matches5$till2>0]="MP"
 matches5$till2[matches5$till2!="MP"]="CT"
 matches5=na.omit(matches5)
 matches5$till3=ifelse(matches5$till2 == "CT", 0, 1)
+
 ```
 
 Save the growth rates data in a single file.
@@ -133,18 +164,15 @@ Originally this script was one, but the genomes size is to big to be uploaded
 in GitHub.
 
 ```{r}
-write.csv(file = "Tillage_GMs_Growth_rates.csv",
+write.csv(file = "../OutputData/Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv",
           matches5)
-```
 
+```
 ```{r}
+print(paste0("The end!!!"))
 ```
+matches6=dcast(matches5, ASV+Soil_Type+Year+FC~., value.var = "DoublingTime", median)
+ggplot(matches6, aes(x=FC, y=(`.`), colour=Soil_Type))+geom_smooth(method = "lm")+stat_cor(method = "spearman")+facet_wrap(~Year)+geom_point()
 
-***Run in Bash***
-***Find the NCBI datasets and save the files in a location***
 
-find . -name "*.zip" -exec unzip -o {} -d  \;
-genome size command :
- checkm2 predict  --input repo1 -o size1 --threads 20 -x fasta
- 
  

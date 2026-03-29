@@ -67,15 +67,25 @@ nutrients4$Nutrient_label=factor(
             )
 )
 
-nutrients5<-aggregate(Variable~Experimental_Year+Tillage+Fertilization+Nutrient, nutrients4, mean, na.rm=TRUE)
+nutrients5<-dcast(nutrients4, Experimental_Year+Tillage+Fertilization+Nutrient~., 
+                  value.var =  "Variable", mean)%>%select(Variable=".",
+                                             everything())
 
-plot1 = ggplot() +
-  geom_bar(data=nutrients5, 
-           aes(x = as.factor(Experimental_Year), y=Variable, fill=paste0(Tillage,"-",Fertilization)), 
-           stat="identity", position=position_dodge(width=0.9), alpha=0.6) +
+nutrients5$Nutrient_label=factor(
+  nutrients5$Nutrient,
+  levels = c("OM[%]","N[%]"),
+  labels = c(expression(paste("SOM (%)")),
+              expression(paste("N (%)"))
+            ))
+
+plot1 = ggplot(data=nutrients5, 
+           aes(x = as.factor(Experimental_Year), y=Variable, fill=paste0(Tillage,"-",Fertilization))) +
+  geom_bar( 
+           stat="summary", position=position_dodge(width=0.9), alpha=0.6) +
   geom_point(data=nutrients4, 
              aes(x=as.factor(Experimental_Year), y=Variable, fill=paste0(Tillage,"-",Fertilization)), 
-             position=position_jitterdodge(jitter.width=0.2, dodge.width=0.9), shape=21,
+             position=position_jitterdodge (jitter.width=0.25,
+                                            dodge.width =0.9 ), shape=21,
              alpha=0.7, size=2) +
   facet_wrap(~Nutrient_label, strip.position="left", scales="free", labeller=label_parsed) +
   scale_alpha_manual(values = c(1, 0.1), name="N. Fert.: ") +
@@ -129,7 +139,7 @@ for(i in unique(paste0(nutrients4$Nutrient))){
   pvalues=data.frame(pval= apply(p, 2, min))
   
   # Add p_value for the model with Experimental_Year as fixed effect
-  file2_fixed=lm(Variable~TILLAGE2*FERTILIZATION2+as.factor(Experimental_Year), data=file1)
+  file2_fixed=lm(Variable~TILLAGE2*FERTILIZATION2*as.factor(Experimental_Year), data=file1)
   file3_fixed=summary(file2_fixed)
   file4_fixed=as.data.frame(file3_fixed$coefficients)
   file5_fixed=file4_fixed[!grepl("^as", rownames(file4_fixed)), ]
@@ -230,7 +240,7 @@ print(ggarrange(plot1, plot2,
 dev.off()
 
 ```
-Create q-q-plots for total nitrogene and SOM 
+Create q-q-plots for total nitrogen and SOM 
 ```{r}
 
 data_TN <- nutrients4 %>% filter(Nutrient_label=='paste("N (%)")') %>% pull(Variable) 
