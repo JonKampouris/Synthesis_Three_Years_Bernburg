@@ -47,11 +47,40 @@ nutrients3=gather(nutrients1,
   value = "Variable")
 
 nutrients4= nutrients3 %>% filter(Nutrient %in% c("N[%]", "OM[%]"))
+nutrients4$G=paste0(nutrients4$Tillage,";", nutrients4$Fertilization)
+```
+Dunn's test for Nitrogen and Carbon 
+```{r}
+Letter_list=list()
+for( i in unique(nutrients4$Nutrient)){
+for( j in unique(nutrients4$Experimental_Year)){
+
+file1=filter(nutrients4, Nutrient==i&Experimental_Year==j)
+dunns= dunn.test::dunn.test(file1$Variable, file1$G, method = "BH")
+comparisons=data.frame(comparisons=dunns$comparisons, p=dunns$P.adjusted)%>%
+  separate(., "comparisons", into = c("row","col"), sep = " - ")
+orderlist= aggregate( file1, Variable~G, mean)
+comparisons=full_join(comparisons, orderlist%>%mutate(row=G), by="row")%>%
+  na.omit()
+comparisons=comparisons[order(comparisons$Variable, decreasing = T),]
+names1=paste0(comparisons$row,"-", comparisons$col)
+p=comparisons$p
+names(p)=names1
+letters=  multcompView::multcompLetters(p,  
+compare = "<", reversed =F)$Letters%>%as.data.frame()
+colnames(letters)="L1"
+letters$G=rownames(letters)
+letters$Experimental_Year=j
+letters$Nutrient=paste0(i)
+Letter_list=rbind(letters, Letter_list)  
+}}
 
 ```
 
+
 Plot the Soil and Nitrogen concentrations.
 ```{r}
+
 nutrients4$Tillage=gsub("Cultivator","CT",
   gsub("Plough", "MP", nutrients4$Tillage)
 )
@@ -67,9 +96,9 @@ nutrients4$Nutrient_label=factor(
             )
 )
 
-nutrients5<-dcast(nutrients4, Experimental_Year+Tillage+Fertilization+Nutrient~., 
+nutrients5<-dcast(nutrients4, Experimental_Year+Tillage+G+Fertilization+Nutrient~., 
                   value.var =  "Variable", mean)%>%select(Variable=".",
-                                             everything())
+                                             everything())%>%full_join(Letter_list)
 
 nutrients5$Nutrient_label=factor(
   nutrients5$Nutrient,
@@ -80,7 +109,7 @@ nutrients5$Nutrient_label=factor(
 
 plot1 = ggplot(data=nutrients5, 
            aes(x = as.factor(Experimental_Year), y=Variable, fill=paste0(Tillage,"-",Fertilization))) +
-  geom_bar( 
+  geom_bar( colour="black",
            stat="summary", position=position_dodge(width=0.9), alpha=0.6) +
   geom_point(data=nutrients4, 
              aes(x=as.factor(Experimental_Year), y=Variable, fill=paste0(Tillage,"-",Fertilization)), 
@@ -105,8 +134,9 @@ plot1 = ggplot(data=nutrients5,
   theme(legend.position="top",axis.title.y=element_text(size=25,colour="black")) + 
   theme(legend.key.size=unit(2,"cm")) +
 
-  guides(alpha = guide_legend(override.aes = list(fill="black")))
-
+  guides(alpha = guide_legend(override.aes = list(fill="black")))+
+    geom_text(stat = "summary", 
+aes(y=Variable*1.05, label=L1), size=9, position = position_dodge(width = 1))
 ```
 
 Create the mixed effect model function with year as random effect 
