@@ -237,6 +237,59 @@ png(filename = "Fig2_RespondersVenn_revised.png", height=3000, width=2750, res=3
 print(plotVenn) 
 dev.off()
 
+data_pos_BS <- list(
+     "2019" = BS_pos_resp_2019$ASV,
+    "2020" = BS_pos_resp_2020$ASV,
+    "2021" = BS_pos_resp_2021$ASV
+)
+data_pos_RH <- list(
+     "2019" = RH_pos_resp_2019$ASV,
+    "2020" = RH_pos_resp_2020$ASV,
+    "2021" = RH_pos_resp_2021$ASV
+)
+
+
+data_neg_BS <- list(
+     "2019" = BS_neg_resp_2019$tax.Genus,
+    "2020" = BS_neg_resp_2020$tax.Genus,
+    "2021" = BS_neg_resp_2021$tax.Genus
+)
+data_neg_RH <- list(
+     "2019" = RH_neg_resp_2019$ASV,
+    "2020" = RH_neg_resp_2020$ASV,
+    "2021" = RH_neg_resp_2021$ASV
+)
+```
+
+```{r}
+plot_pos_BS= ggvenn(data_pos_BS, 
+       c("2019", "2020","2021"),set_name_size=4,text_size=4) +
+    theme(plot.margin = unit(c(1, 1, 1, 1), "cm"))
+
+plot_pos_RH= ggvenn(data_pos_RH, 
+       c("2019", "2020","2021"),set_name_size=4,text_size=4) +
+    theme(plot.margin = unit(c(1, 1, 1, 1), "cm"))
+plot_neg_BS= ggvenn(data_neg_BS, 
+       c("2019", "2020","2021"),set_name_size=4,text_size=4) +
+    theme(plot.margin = unit(c(1, 1, 1, 1), "cm"))
+
+plot_neg_RH= ggvenn(data_neg_RH, 
+       c("2019", "2020","2021"),set_name_size=4,text_size=4) +
+    theme(plot.margin = unit(c(1, 1, 1, 1), "cm"))
+
+
+plots_common=ggarrange(plot_pos_BS,plot_pos_RH,
+  plot_neg_BS,plot_neg_RH, labels = c("Pos. Resp. BS",
+                                      "Pos. Resp. RH",
+                                      "Neg. Resp. BS",
+                                      "Neg. Resp. RH"))
+
+```
+
+```{r}
+png(filename = "../OutputData/SI_Venns_common_in_three_years.png", height = 3000, width = 4000, res=300)
+print(plots_common) 
+dev.off()
 ```
 Combine all plot1 and plotVenn
 
@@ -255,5 +308,4 @@ dev.off()
 
 The End
 ```{r}
-
 ```
