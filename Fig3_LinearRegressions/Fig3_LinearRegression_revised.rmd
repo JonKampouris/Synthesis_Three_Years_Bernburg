@@ -516,8 +516,8 @@ plot_results_RAS_CT_2019=ggplot(RAS_CT_data16S_2019,
   theme(axis.text.x=element_text(size=10,colour="black")) +
   theme(axis.title.x=element_text(size=12,colour="black")) + 
 
-  theme(legend.text=element_text(size=12,colour="black")) + 
-  theme(legend.title=element_text(size=12,colour="black")) + 
+  theme(legend.text=element_text(size=18,colour="black")) + 
+  theme(legend.title=element_text(size=18,colour="black")) + 
   
   ggtitle(paste0("β1 = ",round(results_RAS_CT_2019[2,5],2),
           " [",round(results_RAS_CT_2019[2,7],2),
@@ -543,8 +543,8 @@ plot_results_RH_CT_2019=ggplot(RH_CT_data16S_2019,
   theme(axis.text.x=element_text(size=10,colour="black")) +
   theme(axis.title.x=element_text(size=12,colour="black")) + 
   
-  theme(legend.text=element_text(size=12,colour="black")) + 
-  theme(legend.title=element_text(size=12,colour="black")) + 
+  theme(legend.text=element_text(size=18,colour="black")) + 
+  theme(legend.title=element_text(size=18,colour="black")) + 
   
   ggtitle(paste0("β1 = ",round(results_RH_CT_2019[2,5],2),
           " [",round(results_RH_CT_2019[2,7],2),
@@ -569,8 +569,8 @@ plot_results_RAS_MP_2019=ggplot(RAS_MP_data16S_2019,
   theme(axis.text.x=element_text(size=10,colour="black")) +
   theme(axis.title.x=element_text(size=12,colour="black")) + 
   
-  theme(legend.text=element_text(size=12,colour="black")) + 
-  theme(legend.title=element_text(size=12,colour="black")) + 
+  theme(legend.text=element_text(size=18,colour="black")) + 
+  theme(legend.title=element_text(size=18,colour="black")) + 
   
   ggtitle(paste0("β1 = ",round(results_RAS_MP_2019[2,5],2),
           " [",round(results_RAS_MP_2019[2,7],2),
@@ -595,8 +595,8 @@ plot_results_RH_MP_2019=ggplot(RH_MP_data16S_2019,
   theme(axis.text.x=element_text(size=10,colour="black")) +
   theme(axis.title.x=element_text(size=12,colour="black")) + 
   
-  theme(legend.text=element_text(size=12,colour="black")) + 
-  theme(legend.title=element_text(size=12,colour="black")) + 
+  theme(legend.text=element_text(size=18,colour="black")) + 
+  theme(legend.title=element_text(size=18,colour="black")) + 
   
   ggtitle(paste0("β1 = ",round(results_RH_MP_2019[2,5],2),
           " [",round(results_RH_MP_2019[2,7],2),
@@ -623,8 +623,8 @@ plot_results_RAS_CT_2020=ggplot(RAS_CT_data16S_2020,
   theme(axis.text.x=element_text(size=10,colour="black")) +
   theme(axis.title.x=element_text(size=12,colour="black")) + 
   
-  theme(legend.text=element_text(size=12,colour="black")) + 
-  theme(legend.title=element_text(size=12,colour="black")) + 
+  theme(legend.text=element_text(size=18,colour="black")) + 
+  theme(legend.title=element_text(size=18,colour="black")) + 
   
   ggtitle(paste0("β1 = ",round(results_RAS_CT_2020[2,5],2),
           " [",round(results_RAS_CT_2020[2,7],2),
@@ -650,8 +650,8 @@ plot_results_RH_CT_2020=ggplot(RH_CT_data16S_2020,
   theme(axis.text.x=element_text(size=10,colour="black")) +
   theme(axis.title.x=element_text(size=12,colour="black")) + 
   
-  theme(legend.text=element_text(size=12,colour="black")) + 
-  theme(legend.title=element_text(size=12,colour="black")) + 
+  theme(legend.text=element_text(size=18,colour="black")) + 
+  theme(legend.title=element_text(size=18,colour="black")) + 
   
   ggtitle(paste0("β1 = ",round(results_RH_CT_2020[2,5],2),
           " [",round(results_RH_CT_2020[2,7],2),
@@ -676,8 +676,8 @@ plot_results_RAS_MP_2020=ggplot(RAS_MP_data16S_2020,
   theme(axis.text.x=element_text(size=10,colour="black")) +
   theme(axis.title.x=element_text(size=12,colour="black")) + 
   
-  theme(legend.text=element_text(size=12,colour="black")) + 
-  theme(legend.title=element_text(size=12,colour="black")) + 
+  theme(legend.text=element_text(size=18,colour="black")) + 
+  theme(legend.title=element_text(size=18,colour="black")) + 
   
   ggtitle(paste0("β1 = ",round(results_RAS_MP_2020[2,5],2),
           " [",round(results_RAS_MP_2020[2,7],2),
@@ -703,8 +703,8 @@ plot_results_RH_MP_2020=ggplot(RH_MP_data16S_2020,
   theme(axis.text.x=element_text(size=10,colour="black")) +
   theme(axis.title.x=element_text(size=12,colour="black")) + 
   
-  theme(legend.text=element_text(size=12,colour="black")) + 
-  theme(legend.title=element_text(size=12,colour="black")) + 
+  theme(legend.text=element_text(size=18,colour="black")) + 
+  theme(legend.title=element_text(size=18,colour="black")) + 
   
   ggtitle(paste0("β1 = ",round(results_RH_MP_2020[2,5],2),
           " [",round(results_RH_MP_2020[2,7],2),
@@ -731,8 +731,8 @@ plot_results_RAS_CT_2021=ggplot(RAS_CT_data16S_2021,
   theme(axis.text.x=element_text(size=10,colour="black")) +
   theme(axis.title.x=element_text(size=12,colour="black")) + 
   
-  theme(legend.text=element_text(size=12,colour="black")) + 
-  theme(legend.title=element_text(size=12,colour="black")) + 
+  theme(legend.text=element_text(size=18,colour="black")) + 
+  theme(legend.title=element_text(size=18,colour="black")) + 
   
   ggtitle(paste0("β1 = ",round(results_RAS_CT_2021[2,5],2),
           " [",round(results_RAS_CT_2021[2,7],2),
@@ -757,8 +757,8 @@ plot_results_RH_CT_2021=ggplot(RH_CT_data16S_2021,
   theme(axis.text.x=element_text(size=10,colour="black")) +
   theme(axis.title.x=element_text(size=12,colour="black")) + 
   
-  theme(legend.text=element_text(size=12,colour="black")) + 
-  theme(legend.title=element_text(size=12,colour="black")) + 
+  theme(legend.text=element_text(size=18,colour="black")) + 
+  theme(legend.title=element_text(size=18,colour="black")) + 
   
   ggtitle(paste0("β1 = ",round(results_RH_CT_2021[2,5],2),
           " [",round(results_RH_CT_2021[2,7],2),
@@ -783,8 +783,8 @@ plot_results_RAS_MP_2021=ggplot(RAS_MP_data16S_2021,
   theme(axis.text.x=element_text(size=10,colour="black")) +
   theme(axis.title.x=element_text(size=12,colour="black")) + 
   
-  theme(legend.text=element_text(size=12,colour="black")) + 
-  theme(legend.title=element_text(size=12,colour="black")) + 
+  theme(legend.text=element_text(size=18,colour="black")) + 
+  theme(legend.title=element_text(size=18,colour="black")) + 
   
   ggtitle(paste0("β1 = ",round(results_RAS_MP_2021[2,5],2),
           " [",round(results_RAS_MP_2021[2,7],2),
@@ -809,8 +809,8 @@ plot_results_RH_MP_2021=ggplot(RH_MP_data16S_2021,
   theme(axis.text.x=element_text(size=10,colour="black")) +
   theme(axis.title.x=element_text(size=12,colour="black")) + 
   
-  theme(legend.text=element_text(size=12,colour="black")) + 
-  theme(legend.title=element_text(size=12,colour="black")) + 
+  theme(legend.text=element_text(size=18,colour="black")) + 
+  theme(legend.title=element_text(size=18,colour="black")) + 
   
   ggtitle(paste0("β1 = ",round(results_RH_MP_2021[2,5],2),
           " [",round(results_RH_MP_2021[2,7],2),

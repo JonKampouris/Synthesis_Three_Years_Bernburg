@@ -236,8 +236,8 @@ plot2 =ggplot(fixed_effects2,
 Save the image
 ```{r}
 png(filename = "Fig1_SoilLab_revised.png",
-    width = 8000, 
-    height = 8000, 
+    width = 5000, 
+    height = 7000, 
     res=300)
 print(ggarrange(plot1, plot2,
                 labels = c("A)","B)"), ncol = 1,
