@@ -1,0 +1,185 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: inline
+---
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+```
+
+```{r,  results="hide"}
+library(tidyverse)# Tidying up the data, Version 2.0.0
+library(ggplot2) # Creating graphs, Version 3.5.1
+library(plyr) # Tidying up data, Version 1.8.9
+library(dplyr) #Tidying up data, Version 1.1.4
+library(readr) # Loading text files, Version 2.1.5
+library(readxl) # Loading excel files, Version 1.4.4
+library(ggpubr) # Adding statistics in plots, Version 0.6.0 
+library(stringi) # String selection tool, Version 1.8.4 
+library(tidyr) # Tidying up the data, Version 1.3.1
+library(reshape2) # Reshaping the data and infer statistics, Version 1.4.4
+```
+
+The script follows the analysis for the genome growth rates. 
+Because the genome files can not be reuploaded I need to break the scripts
+in two. Thus, in case anyone needs to re-run, you need to load this file 
+```{r}
+GRfiles=read.csv(file.path("../OutputData", "Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv"), check.names=F)
+
+GRfiles= dcast(Soil_Type+till2+Genome+Year~.,  value.var = "DoublingTime", mean, data=GRfiles)%>%
+  select(DoublingTime=".", everything())
+GRfiles$Group=GRfiles$Year
+
+
+```
+
+Create the first plot
+```{r}
+GRfilesB=GRfiles
+GRfilesB$Group="All Years Together"
+GRfilesC=rbind(GRfilesB,GRfiles)
+GRfilesC$Group=factor(GRfilesC$Group,
+levels = c("All Years Together", "2020",
+           "2021","2019"  ))
+
+
+plot1 = ggplot(GRfilesC, 
+  aes( y=log10(DoublingTime), x=Group,  fill= paste(till2))) +
+  geom_boxplot(alpha=0.75) +
+  facet_wrap(~Soil_Type) +
+  scale_fill_brewer(name="",palette = "Dark2") +
+  theme_bw() +
+  ylab("Log10 predicted minimal doubling time (hours)") + 
+  xlab("Group") +
+  theme(strip.background=element_rect(fill="white",colour="white")) +
+  theme(strip.text=element_text(size=15,colour="black",angle = 0)) +
+  
+  theme(legend.text=element_text(size=15,colour="black")) + 
+  theme(legend.title=element_text(size=15,colour="black")) + 
+  theme(legend.position ="top",
+        axis.text.y=element_text(size=15,colour="black"),
+        axis.title.y=element_text(size=15,colour="black")) + 
+  theme(legend.key.size=unit(2,"cm")) +
+  
+  theme(axis.text.x=element_text(size=15,colour="black")) +
+  theme(axis.title.x=element_text(size=15,colour="black")) +
+  stat_compare_means(method = "wilcox.test", label = "p.signif",size=8,
+                     hide.ns = T, label.y = 2)
+
+```
+
+Create the second plot
+```{r}
+sizegenome=read.csv(file.path(
+"../OutputData", "Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv"),
+check.names=F)
+
+```
+```{r}
+matches2=dcast(sizegenome,Soil_Type+till2+Genome+Year~., value.var = "Genome_Size2",mean)%>%
+  select(Corrected_size=".", everything())
+
+```
+
+```{r}
+matches2$Group=matches2$Year
+GSfilesB=matches2
+GSfilesB$Group="All Years Together"
+GSfilesC=rbind(GSfilesB,matches2)
+
+GSfilesC$Group=factor(GSfilesC$Group,
+levels = c("All Years Together","2021", "2020",
+           "2019"  ))
+
+plot2 = ggplot(GSfilesC, 
+  aes( y=log10(Corrected_size),
+       x=Group,  fill= paste(till2))) +
+  geom_boxplot(alpha=0.75) +
+  facet_wrap(~Soil_Type) +
+  scale_fill_brewer(name="",palette = "Dark2") +
+  theme_bw() +
+  ylab("Log10 (bp)") + 
+  xlab("Group") +
+  theme(strip.background=element_rect(fill="white",colour="white")) +
+  theme(strip.text=element_text(size=15,colour="black",angle = 0)) +
+  
+  theme(legend.text=element_text(size=15,colour="black")) + 
+  theme(legend.title=element_text(size=15,colour="black")) + 
+  theme(legend.position ="top",
+        axis.text.y=element_text(size=15,colour="black"),
+        axis.title.y=element_text(size=15,colour="black")) + 
+  theme(legend.key.size=unit(2,"cm")) +
+  
+  theme(axis.text.x=element_text(size=15,colour="black")) +
+  theme(axis.title.x=element_text(size=15,colour="black")) +
+  stat_compare_means(method = "wilcox.test", label = "p.signif",size=8, hide.ns = T, label.y = 7.3)
+
+```  
+
+```{r}
+cazygenes= read.csv(file.path(
+"../OutputData", "Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv"),
+check.names=F)
+
+
+```
+Until this part can not be uploaded in the linux server 
+
+```{r}
+matches2=dcast(cazygenes,Soil_Type+till2+Genome+Year+tax.Phylum+ASV+FC~., value.var = "CazymeGenes",mean)%>%
+  select(CazymeGenes=".", everything())
+```
+
+```{r}
+matches2$Group=matches2$Year
+CZfilesB=matches2
+CZfilesB$Group="All Years Together"
+CZfilesC=rbind(CZfilesB,matches2)
+
+CZfilesC$Group=factor(CZfilesC$Group,
+levels = c("All Years Together", "2020",
+           "2021","2019"  ))
+
+plot3 = ggplot(CZfilesC, 
+  aes( y=log10(CazymeGenes),
+       x=Group,  fill= paste(till2))) +
+  geom_boxplot(alpha=0.75) +
+  facet_wrap(~Soil_Type) +
+  scale_fill_brewer(name="",palette = "Dark2") +
+  theme_bw() +
+ ylab("Log10 (CAZyme genes/genome)")+
+  xlab("Group") +
+  theme(strip.background=element_rect(fill="white",colour="white")) +
+  theme(strip.text=element_text(size=15,colour="black",angle = 0)) +
+  
+  theme(legend.text=element_text(size=15,colour="black")) + 
+  theme(legend.title=element_text(size=15,colour="black")) + 
+  theme(legend.position ="top",
+        axis.text.y=element_text(size=15,colour="black"),
+        axis.title.y=element_text(size=15,colour="black")) + 
+  theme(legend.key.size=unit(2,"cm")) +
+    theme(axis.text.x=element_text(size=15,colour="black")) +
+  theme(axis.title.x=element_text(size=15,colour="black")) +
+  stat_compare_means(method = "wilcox.test", label = "p.signif",size=8, hide.ns = T, label.y = 3)
+```
+Combine plots
+```{r}
+plots=ggarrange(plot1+
+  coord_flip(), plot2+
+  coord_flip(), plot3+
+  coord_flip(), 
+          labels = c("A)","B)","C)"),
+          font.label = list(face="bold", size=35), ncol=1, common.legend = T)
+  
+```
+Save plot
+```{r}
+png(filename = "GrowthrateGenomeSizePlots.png", height = 5000,
+    width = 6000, res=350)
+print(plots)
+dev.off()
+```
+
+```{r}
+print("The End")
+```

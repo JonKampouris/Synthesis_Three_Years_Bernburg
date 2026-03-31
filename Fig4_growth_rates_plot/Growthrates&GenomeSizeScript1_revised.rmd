@@ -312,10 +312,12 @@ Originally this script was one, but the genomes size is to big to be uploaded
 in GitHub.
 
 ```{r}
-write.csv(file = "../OutputData/Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv",
+write.csv(file = 
+    "../OutputData/Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv",
           matches5)
 
 ```
+
 
 ```{r}
 print(paste0("The end!!!"))
