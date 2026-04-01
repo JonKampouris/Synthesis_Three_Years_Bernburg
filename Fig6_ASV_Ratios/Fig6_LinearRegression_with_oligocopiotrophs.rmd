@@ -65,11 +65,11 @@ GRfiles$Trait[GRfiles$.<limit]="fast_grower"
 ```
 
 ```{r}
-distributionplot= ggplot(GRfiles,aes(x=log10(.),fill=Soil_Type)) +
+distributionplot= ggplot(GRfiles,aes(x=log10(.))) +
   theme_bw() + 
   geom_density(alpha=0.5, fill="skyblue4") +
   ylab("Density") +
-  xlab("Log10 mDbTs (hours) for all ASVs mapped to different genomes") +
+  xlab("Log10 mean mDbTs (hours) for all ASVs mapped to different genomes") +
   
   theme(strip.background=element_rect(fill="white",colour="black")) +
   theme(strip.text=element_text(size=25,colour="black")) +
@@ -83,7 +83,7 @@ distributionplot= ggplot(GRfiles,aes(x=log10(.),fill=Soil_Type)) +
   theme(legend.position="top",axis.title.y=element_text(size=25,colour="black")) + 
   theme(legend.key.size=unit(2,"cm")) +
   
-  geom_vline(aes(xintercept=(median(log10(GRfiles$.)))),colour="black",linetype="dashed") 
+  geom_vline(aes(xintercept=(log10(median(GRfiles$.)))),colour="black",linetype="dashed") 
 
 ```
 
@@ -149,7 +149,7 @@ ggplot(RAS_RH_Ratio_data16S3,
   scale_fill_brewer(name="",palette = "Dark2") +
   theme_bw() +
   xlab("") +
-  ylab("Ratio fast-/slow-growing bacterial ASVs") +
+  ylab("RA ratio of fast/slow-growing bacterial ASVs") +
   theme(strip.background=element_rect(fill="white",colour="white")) +
   theme(strip.text=element_text(size=25,colour="black",angle = 0)) +
   
@@ -178,7 +178,7 @@ ggplot(RAS_RH_Ratio_data16S2,
   scale_fill_brewer(name="",palette = "Dark2") +
   theme_bw() +
   xlab("SOM") +
-  ylab("Ratio of fast-/slow-growing bacterial ASVs") +
+  ylab("RA ratio of fast/slow-growing bacterial ASVs") +
   theme(strip.background=element_rect(fill="white",colour="white")) +
   theme(strip.text=element_text(size=25,colour="black",angle = 0)) +
   
@@ -190,10 +190,10 @@ ggplot(RAS_RH_Ratio_data16S2,
   theme(legend.position="right",
         axis.text.y=element_text(size=25,colour="black"),
         axis.title.y=element_text(size=25,colour="black")) + 
-  theme(legend.key.size=unit(2,"cm")) +stat_cor(method = "spearman", aes(colour = Tillage),size=5, cor.coef.name="ρ")+
+  theme(legend.key.size=unit(2,"cm")) +stat_cor(method = "spearman", aes(colour = Tillage),size=7.5, cor.coef.name="ρ")+
   scale_color_brewer(palette = "Dark2", name="")+
-  facet_wrap(~Soil_Type)
-plots1=ggarrange(plotdiff,plotcor, common.legend = T, legend = "top")
+  facet_wrap(~Soil_Type, nrow=2)
+plots1=ggarrange(plotdiff,plotcor, common.legend = T, nrow= 1, legend = "right")
 ```
 
 Fast_grower bacterial ASVs
@@ -217,14 +217,14 @@ RAS_RH_Ratio_data16S4=full_join(RAS_RH_Ratio_data16S2,letters)
 RAS_RH_Ratio_data16S4$equal=" "
 plotdiff_fast_growers=
 ggplot(RAS_RH_Ratio_data16S4, 
-  aes(x=Soil_Type, y=log10(100*fast_grower/15349),  fill= paste(Tillage))) +
+  aes(x=Soil_Type, y=(100*fast_grower/15349),  fill= paste(Tillage))) +
   geom_jitter(shape=21, size=2, position = position_jitterdodge(jitter.width =0.25,dodge.width = 1)) +
   geom_boxplot(alpha=0.5, position = position_dodge(width = 1)) +
   
   scale_fill_brewer(name="",palette = "Dark2") +
   theme_bw() +
   xlab("") +
-  ylab("Log10 RA[%] of fast-growing bacterial ASVs") +
+  ylab("RA[%] of fast-growing bacterial ASVs") +
   theme(strip.background=element_rect(fill="white",colour="white")) +
   theme(strip.text=element_text(size=25,colour="black",angle = 0)) +
   
@@ -238,20 +238,20 @@ ggplot(RAS_RH_Ratio_data16S4,
         axis.title.y=element_text(size=25,colour="black")) + 
   theme(legend.key.size=unit(2,"cm")) +
     geom_text(stat = "summary", 
-aes(y=log10(100*fast_grower/15349)+0.3, label=L1), size=9, position = position_dodge(width = 1)) +
+aes(y=(100*fast_grower/15349)+13, label=L1), size=9, position = position_dodge(width = 1)) +
 theme(legend.position = "right")+facet_wrap(~equal)
 ```
 
 ```{r}
 plotcor_fast_growers=
 ggplot(RAS_RH_Ratio_data16S2, 
-  aes(x=OM, y=log10(100*fast_grower/15349),  fill= paste(Tillage))) +
+  aes(x=OM, y=(100*fast_grower/15349),  fill= paste(Tillage))) +
   geom_point(shape=21, size=2, position = position_jitterdodge(jitter.width =0.25,dodge.width = 1)) +
   geom_smooth(method = "lm")+
   scale_fill_brewer(name="",palette = "Dark2") +
   theme_bw() +
   xlab("SOM") +
-  ylab("Log10 RA[%] of fast-growing bacterial ASVs") +
+  ylab("RA[%] of fast-growing bacterial ASVs") +
   theme(strip.background=element_rect(fill="white",colour="white")) +
   theme(strip.text=element_text(size=25,colour="black",angle = 0)) +
   
@@ -265,8 +265,9 @@ ggplot(RAS_RH_Ratio_data16S2,
         axis.title.y=element_text(size=25,colour="black")) + 
   theme(legend.key.size=unit(2,"cm")) +stat_cor(method = "spearman", aes(colour = Tillage),size=5, cor.coef.name="ρ", label.x = 2.0)+
   scale_color_brewer(palette = "Dark2", name="")+
-  facet_wrap(~Soil_Type)
-plots2=ggarrange(plotdiff_fast_growers,plotcor_fast_growers, common.legend = T, legend = "top")
+  facet_wrap(~Soil_Type, nrow=2)
+plots2=ggarrange(plotdiff_fast_growers,plotcor_fast_growers, 
+                 common.legend = T, ncol = 2, legend = "right")
 
 ```
 
@@ -292,14 +293,14 @@ RAS_RH_Ratio_data16S4=full_join(RAS_RH_Ratio_data16S2,letters)
 RAS_RH_Ratio_data16S4$equal=" "
 plotdiff_slow_growers=
 ggplot(RAS_RH_Ratio_data16S4, 
-  aes(x=Soil_Type, y=log10(100*slow_grower/15349),  fill= paste(Tillage))) +
+  aes(x=Soil_Type, y=(100*slow_grower/15349),  fill= paste(Tillage))) +
   geom_jitter(shape=21, size=2, position = position_jitterdodge(jitter.width =0.25,dodge.width = 1)) +
   geom_boxplot(alpha=0.5, position = position_dodge(width = 1)) +
   
   scale_fill_brewer(name="",palette = "Dark2") +
   theme_bw() +
   xlab("") +
-  ylab("Log10 RA[%] of slow-growing bacterial ASVs") +
+  ylab(" RA[%] of slow-growing bacterial ASVs") +
   theme(strip.background=element_rect(fill="white",colour="white")) +
   theme(strip.text=element_text(size=25,colour="black",angle = 0)) +
   
@@ -320,13 +321,13 @@ theme(legend.position = "right")+facet_wrap(~equal)
 ```{r}
 plotcor_slow_growers=
 ggplot(RAS_RH_Ratio_data16S2, 
-  aes(x=OM, y=log10(100*slow_grower/15349),  fill= paste(Tillage))) +
+  aes(x=OM, y=(100*slow_grower/15349),  fill= paste(Tillage))) +
   geom_point(shape=21, size=2, position = position_jitterdodge(jitter.width =0.25,dodge.width = 1)) +
   geom_smooth(method = "lm")+
   scale_fill_brewer(name="",palette = "Dark2") +
   theme_bw() +
   xlab("SOM") +
-  ylab("Log10 RA[%] of slow-growing bacterial ASVs") +
+  ylab("RA[%] of slow-growing bacterial ASVs") +
   theme(strip.background=element_rect(fill="white",colour="white")) +
   theme(strip.text=element_text(size=25,colour="black",angle = 0)) +
   
@@ -338,7 +339,7 @@ ggplot(RAS_RH_Ratio_data16S2,
   theme(legend.position="right",
         axis.text.y=element_text(size=25,colour="black"),
         axis.title.y=element_text(size=25,colour="black")) + 
-  theme(legend.key.size=unit(2,"cm")) +stat_cor(method = "spearman", aes(colour = Tillage),size=5, cor.coef.name="ρ", label.x = 2.0)+
+  theme(legend.key.size=unit(2,"cm")) +stat_cor(method = "pearson", aes(colour = Tillage),size=5, cor.coef.name="ρ", label.x = 2.0)+
   scale_color_brewer(palette = "Dark2", name="")+
   facet_wrap(~Soil_Type)
 plots3=ggarrange(plotdiff_slow_growers,plotcor_slow_growers, common.legend = T, legend = "top")
