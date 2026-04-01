@@ -193,7 +193,7 @@ ggplot(RAS_RH_Ratio_data16S2,
   theme(legend.key.size=unit(2,"cm")) +stat_cor(method = "spearman", aes(colour = Tillage),size=7.5, cor.coef.name="ρ")+
   scale_color_brewer(palette = "Dark2", name="")+
   facet_wrap(~Soil_Type, nrow=2)
-plots1=ggarrange(plotdiff,plotcor, common.legend = T, nrow= 1, legend = "right")
+plots1=ggarrange(plotdiff,plotcor, common.legend = T, nrow= 1, legend = "right", labels = c("A)","B)"),font.label = list(size=20))
 ```
 
 Fast_grower bacterial ASVs
