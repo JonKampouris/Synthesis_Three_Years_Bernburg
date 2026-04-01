@@ -50,7 +50,7 @@ plot1 = ggplot(GRfilesC,
   scale_fill_brewer(name="",palette = "Dark2") +
   theme_bw() +
   ylab("Log10 predicted minimal doubling time (hours)") + 
-  xlab("Group") +
+  xlab("") +
   theme(strip.background=element_rect(fill="white",colour="white")) +
   theme(strip.text=element_text(size=15,colour="black",angle = 0)) +
   
@@ -99,7 +99,7 @@ plot2 = ggplot(GSfilesC,
   scale_fill_brewer(name="",palette = "Dark2") +
   theme_bw() +
   ylab("Log10 (bp)") + 
-  xlab("Group") +
+  xlab("") +
   theme(strip.background=element_rect(fill="white",colour="white")) +
   theme(strip.text=element_text(size=15,colour="black",angle = 0)) +
   
@@ -148,7 +148,7 @@ plot3 = ggplot(CZfilesC,
   scale_fill_brewer(name="",palette = "Dark2") +
   theme_bw() +
  ylab("Log10 (CAZyme genes/genome)")+
-  xlab("Group") +
+  xlab("") +
   theme(strip.background=element_rect(fill="white",colour="white")) +
   theme(strip.text=element_text(size=15,colour="black",angle = 0)) +
   

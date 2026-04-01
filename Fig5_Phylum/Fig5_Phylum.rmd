@@ -15,8 +15,8 @@ library(reshape2) # Reshaping the data and infer statistics, Version 1.4.4
 The script follows a further analysis of genome growth rates. 
 Thus, in case anyone needs to re-run, you need to load this file 
 ```{r}
-GRfiles=read.csv(file.path("../InputData", "Tillage_GMs_Growth_rates.csv"))
-GRfiles= dcast(Soil_Type+till2+tax.Phylum+Genome~.,  value.var = "DoublingTime", mean, data=GRfiles)%>%
+GRfiles=read.csv(file.path("../OutputData", "Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv"), check.names=F)
+GRfiles= dcast(Soil_Type+till2+tax.Phylum+Genome+Year~.,  value.var = "DoublingTime", mean, data=GRfiles)%>%
   select(DoublingTime=".", everything())
 
 ```
@@ -32,7 +32,7 @@ plot1 = ggplot(GRfiles,
   scale_fill_brewer(palette = "Set3", name="") +
   theme_bw() +
   xlab("Tillage intensity") + 
-  ylab("Log10 predicted minimal doubling time (hours)") +
+  ylab("Log10 pmDT (hours)") +
   theme(strip.background=element_rect(fill="white", colour="white")) +
   theme(strip.text=element_text(size=35,colour="black",angle=0)) +
 
@@ -49,12 +49,12 @@ plot1 = ggplot(GRfiles,
 
 Create the second plot
 ```{r}
-GRfiles=read.csv(file.path("../InputData", "Tillage_GMs_Growth_rates.csv"))
+GRfiles=read.csv(file.path("../OutputData", "Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv"), check.names=F)
 
-GRfiles$till2=GRfiles$stat
+GRfiles$till2=GRfiles$coeff
 GRfiles$till2[GRfiles$till2>0]="MP"
 GRfiles$till2[GRfiles$till2!="MP"]="CT"
-GRfiles1=dcast(GRfiles,Soil_Type+till2+tax.Phylum+Genome~., value.var = "DoublingTime",mean)%>%
+GRfiles1=dcast(GRfiles,Soil_Type+till2+tax.Phylum+Genome+Year+ASV~., value.var = "DoublingTime",mean)%>%
   select(lg=".", everything())
 ```
 
@@ -65,7 +65,7 @@ GRfiles1$lg=(GRfiles1$lg)
 
 
 
-GRfilesB=filter(GRfiles, Soil_Type=="RAS")
+GRfilesB=filter(GRfiles1, Soil_Type=="BS")
 GRfilesB=filter(GRfilesB, tax.Phylum%in%c("Actinobacteriota",
                                           "Firmicutes", 
                                           "Proteobacteria"))
@@ -75,10 +75,9 @@ GRfilesB=filter(GRfilesB, tax.Phylum%in%c("Actinobacteriota",
 # for every phylum
 
 plist=list()
-GRfilesB$lg=log10(GRfilesB$DoublingTime)
 for(j in unique(GRfilesB$tax.Phylum)){
   file1=filter(GRfilesB, tax.Phylum==paste0(j))  
-  w1=wilcox.test(file1$DoublingTime~file1$till2)
+  w1=wilcox.test(file1$lg~file1$till2)
   file2=dcast(Soil_Type~till2,  value.var = "lg", mean, data=file1)
   p=data.frame(p= w1$p.value,
   d=(file2$CT-file2$MP)/sd(file1$lg),
@@ -90,14 +89,16 @@ plist$adj=p.adjust(plist$p, method = "BH")
 #write.csv(plist, file = "Growth_rates_per_phylum_plist.csv")
 
 plot2 = ggplot(GRfilesB, 
-  aes(fill=till2, y=log10(DoublingTime), x=tax.Phylum)) +
+  aes(fill=till2, y=log10(lg), x=tax.Phylum)) +
   geom_jitter(position = position_jitterdodge(dodge.width = 1),shape=21, size=2) +
   geom_violin(alpha=0.5, position = position_dodge(width = 1)) +
+    geom_boxplot(alpha=0.5, position = position_dodge(width = 1)) +
+
   facet_wrap(~tax.Phylum,scales = "free") +
   scale_fill_brewer(name="",palette = "Dark2") +
   theme_bw() +
   xlab("") +
-  ylab("Log10 predicted minimal doubling time (hours)") +
+  ylab("Log10 pmDT (hours)") +
   theme(strip.background=element_rect(fill="white",colour="white")) +
   theme(strip.text=element_text(size=18,colour="white",angle=0)) +
  
@@ -112,33 +113,53 @@ plot2 = ggplot(GRfilesB,
   
   stat_compare_means(method = "wilcox.test", hide.ns = T, label = "p.signif",size=8)
 
+
+plot2B = ggplot(GRfilesB, 
+  aes(fill=till2, y=log10(lg), x=as.factor(Year))) +
+  geom_jitter(position = position_jitterdodge(dodge.width = 1),shape=21, size=2) +
+  geom_violin(alpha=0.5, position = position_dodge(width = 1)) +
+  geom_boxplot(alpha=0.5, position = position_dodge(width = 1)) +
+
+  facet_wrap(~tax.Phylum,scales = "free") +
+  scale_fill_brewer(name="",palette = "Dark2") +
+  theme_bw() +
+  xlab("") +
+  ylab("Log10 pmDT (hours)") +
+  theme(strip.background=element_rect(fill="white",colour="white")) +
+  theme(strip.text=element_text(size=35,colour="black",angle=0)) +
+ 
+  theme(axis.text.y=element_text(size=35,colour="black")) +
+  theme(axis.text.x=element_text(size=35,colour="black")) +
+  theme(axis.title.x=element_text(size=35,colour="black")) +
+  theme(axis.title.y=element_text(size=35,colour="black")) +
+  
+  theme(legend.title=element_text(size=35,colour="black")) +
+  theme(legend.text=element_text(size=35,colour="black")) +
+  theme(legend.key.size=unit(2,"cm")) + 
+  
+  stat_compare_means(method = "wilcox.test", hide.ns = T,
+                     label = "p.signif",size=8)
+
 ```  
 
 
 ```{r}
-sizegenome=read.delim(file.path("../InputData", "quality_report.tsv")) 
-sizegenome$genome=sizegenome$Name
+sizegenome=read.csv(file.path("../OutputData", "Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv")) 
 ```
 
 ```{r}
-matches2=full_join(GRfiles,sizegenome, by="genome")%>%na.omit()
-matches2$Corrected_size=matches2$Genome_Size+matches2$Genome_Size*((100-matches2$Completeness)/100)
-write.csv(file = file.path("../InputData", "genomesizesummarized_total.csv"), matches2)
-
-
-matches2$till2=matches2$stat
+matches2=sizegenome
+matches2$till2=matches2$coeff
 matches2$till2[matches2$till2>0]="MP"
 matches2$till2[matches2$till2!="MP"]="CT"
 matches2=dcast(matches2,
-Genome+till2+Soil_Type+tax.Phylum~., value.var =  "Corrected_size",mean)%>%
+Genome+till2+Soil_Type+tax.Phylum+Year+ASV~., value.var =  "Genome_Size2",mean)%>%
   select(Corrected_size=".", everything())
 ```
 
 ```{r}
 
-GSfiles=filter(matches2, Soil_Type=="RAS")
-
-
+GSfiles=filter(matches2, Soil_Type=="BS")
 plot3= ggplot(GSfiles, 
   aes(fill=tax.Phylum, x=till2, y=(log10(Corrected_size)))) +
   geom_jitter(position = position_jitterdodge(jitter.width = 0.1,dodge.width = 1),size=3, shape=21) +
@@ -165,8 +186,6 @@ GSfiles2B=filter(GSfiles, tax.Phylum%in%c("Actinobacteriota",
                                           "Firmicutes", 
                                           "Proteobacteria"))
 
-
-
 plist=list()
 GSfiles2B$GS=log10(GSfiles2B$Corrected_size)
 for(j in unique(GSfiles2B$tax.Phylum)){
@@ -184,7 +203,8 @@ plist$adj=p.adjust(plist$p, method = "BH")
 plot4= ggplot(GSfiles2B, 
   aes(fill=till2, y=(GS), x=tax.Phylum)) +
   geom_jitter(position = position_jitterdodge(dodge.width = 1),shape=21, size=2) +
-  geom_violin(alpha=0.5, position = position_dodge(width = 1)) +
+   geom_violin(alpha=0.5, position = position_dodge(width = 1)) +
+    geom_boxplot(alpha=0.5, position = position_dodge(width = 1)) +
   facet_wrap(~tax.Phylum,scales = "free") +
   scale_fill_brewer(name="",palette = "Dark2") +
   theme_bw() +
@@ -203,26 +223,51 @@ plot4= ggplot(GSfiles2B,
   theme(legend.key.size=unit(2,"cm")) +
   
   stat_compare_means(method = "wilcox.test", hide.ns = T, label = "p.signif",size=8)
+
+
+plot4B = ggplot(GSfiles2B, 
+  aes(fill=till2, y=(GS), x=as.factor(Year))) +
+  geom_jitter(position = position_jitterdodge(dodge.width = 1),shape=21, size=2) +
+  geom_violin(alpha=0.5, position = position_dodge(width = 1)) +
+  geom_boxplot(alpha=0.5, position = position_dodge(width = 1)) +
+
+  facet_wrap(~tax.Phylum,scales = "free") +
+  scale_fill_brewer(name="",palette = "Dark2") +
+  theme_bw() +
+  xlab("") +
+  ylab("Log10 genome size (bp)") +
+  theme(strip.background=element_rect(fill="white",colour="white")) +
+  theme(strip.text=element_text(size=35,colour="black",angle=0)) +
  
+  theme(axis.text.y=element_text(size=35,colour="black")) +
+  theme(axis.text.x=element_text(size=35,colour="black")) +
+  theme(axis.title.x=element_text(size=35,colour="black")) +
+  theme(axis.title.y=element_text(size=35,colour="black")) +
+  
+  theme(legend.title=element_text(size=35,colour="black")) +
+  theme(legend.text=element_text(size=35,colour="black")) +
+  theme(legend.key.size=unit(2,"cm")) + 
+  
+  stat_compare_means(method = "wilcox.test", hide.ns = T, label = "p.signif",size=8)
 
 ```
 
 ```{r}
-cazygenes= read.csv(file = "../InputData/CAZ_enzymes_per_genome.csv")
+cazygenes= read.csv(file = "../OutputData/Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv")
 ```
 Until this part can not be uploaded in the linux server 
 
 ```{r}
 
 cazygenes2=cazygenes
-
-cazygenes2$Soil_Type=gsub("RAS", "BS",cazygenes2$Soil_Type)
 cazygenes2=filter(cazygenes2, Soil_Type=="BS")
 
 plot5 = ggplot(cazygenes2, 
   aes(fill=tax.Phylum, x=till2, y=(log10( Sach_genes)))) +
   geom_jitter(position = position_jitterdodge(jitter.width = 0.1,dodge.width = 1),size=3, shape=21) +
-  geom_boxplot(position = position_dodge(width = 1), alpha=0.75) +
+  geom_violin(alpha=0.5, position = position_dodge(width = 1)) +
+    geom_boxplot(alpha=0.5, position = position_dodge(width = 1)) +
+
   scale_fill_brewer(palette = "Set3", name="") +
   theme_bw() +
   xlab("Tillage intensity") + 
@@ -246,7 +291,7 @@ cazygenes3=filter(cazygenes2, tax.Phylum%in%c("Actinobacteriota", "Firmicutes", 
 
 ```{r}
 plist=list()
-cazygenes3$SG=log10(cazygenes3$Sach_genes)
+cazygenes3$SG=log10(cazygenes3$CazymeGenes)
 for(j in unique(cazygenes3$tax.Phylum)){
   file1=filter(cazygenes3, tax.Phylum==paste0(j))  
   w1=wilcox.test(file1$SG~file1$till2)
@@ -262,9 +307,10 @@ plist$adj=p.adjust(plist$p, method = "BH")
 
 
 plot6= ggplot(cazygenes3, 
-  aes(fill=till2, y=log10(Sach_genes), x=tax.Phylum)) +
+  aes(fill=till2, y=log10(CazymeGenes+1), x=tax.Phylum)) +
   geom_jitter(position = position_jitterdodge(dodge.width = 1),shape=21, size=2)+
-  geom_violin(alpha=0.5,position = position_dodge(width = 1)) +
+geom_violin(alpha=0.5, position = position_dodge(width = 1)) +
+  geom_boxplot(alpha=0.5, position = position_dodge(width = 1)) +
   facet_wrap(~tax.Phylum,scales = "free") +
   scale_fill_brewer(name="",palette = "Dark2") +
   theme_bw() +
@@ -285,25 +331,41 @@ plot6= ggplot(cazygenes3,
   stat_compare_means(method = "wilcox.test", hide.ns = T, label = "p.signif",size=8)
 
 
+
+
+plot6B= ggplot(cazygenes3, 
+  aes(fill=till2, y=log10(CazymeGenes+1), x=as.factor(Year))) +
+  geom_jitter(position = position_jitterdodge(dodge.width = 1),
+              shape=21, size=2) +
+  geom_violin(alpha=0.5, position = position_dodge(width = 1)) +
+  geom_boxplot(alpha=0.5, position = position_dodge(width = 1)) +
+
+  facet_wrap(~tax.Phylum,scales = "free") +
+  scale_fill_brewer(name="",palette = "Dark2") +
+  theme_bw() +
+  xlab("") +
+  ylab("Log10 (CAZyme genes/genome)") +
+  theme(strip.background=element_rect(fill="white",colour="white")) +
+  theme(strip.text=element_text(size=35,colour="black",angle=0)) +
+ 
+  theme(axis.text.y=element_text(size=35,colour="black")) +
+  theme(axis.text.x=element_text(size=35,colour="black")) +
+  theme(axis.title.x=element_text(size=35,colour="black")) +
+  theme(axis.title.y=element_text(size=35,colour="black")) +
+  
+  theme(legend.title=element_text(size=35,colour="black")) +
+  theme(legend.text=element_text(size=35,colour="black")) +
+  theme(legend.key.size=unit(2,"cm")) + 
+  
+  stat_compare_means(method = "wilcox.test", hide.ns = T,
+                     label = "p.signif",size=8)
+
 ```
 Counting genomes
 ```{r}
 Genome_Count_Per_Phylum=data.frame(No=table(paste0(
   GRfiles$tax.Phylum,"_",GRfiles$till2, GRfiles$Soil_Type)))
-#write.csv(Genome_Count_Per_Phylum, file = "genomenumbercounts.csv")
 
-
-TableS4=
-full_join(
-select(GRfiles, Genome, genome, ASV, stat, Soil_Type, DoublingTime),
-  select(GSfiles, Genome,  Genome_Size=Corrected_size))%>%
-  full_join(
-
-select(
-cazygenes2,
-CAZy_Gene_No= Sach_genes, genome,Gene_No=gene_No
-))%>%na.omit()%>%select(-Genome)
-#write.csv(TableS4, "../OutputData/TableS4.csv")
 ```
 
 
@@ -311,16 +373,16 @@ CAZy_Gene_No= Sach_genes, genome,Gene_No=gene_No
 
 Combine plots
 ```{r}
-plots=ggarrange(plot1,plot2,plot3,plot4,plot5,plot6, 
-  labels = c("A)","D)","B)","E)","C)","F)"),
-  font.label = list(face="bold", size=35), ncol=2, nrow = 3)
+plots=ggarrange(plot2,plot4,plot6, 
+  labels = c("A)","B)","C)"),
+  font.label = list(face="bold", size=25),ncol =  1)
   
 ```
 
 Save plot
 ```{r}
-png(filename = "Fig5_Phylum.png", height = 15000,
-    width = 10000, res=350)
+png(filename = "Fig5_Phylum.png", height = 6500,
+    width = 5000, res=200)
 print(plots)
 dev.off()
 ```
