@@ -323,7 +323,7 @@ plotcor_slow_growers=
 ggplot(RAS_RH_Ratio_data16S2, 
   aes(x=OM, y=(100*slow_grower/15349),  fill= paste(Tillage))) +
   geom_point(shape=21, size=2 ) +
-  geom_point(shape=21, size=2, position = position_jitterdodge(jitter.width =0.25,dodge.width = 1)) +
+  geom_point(shape=21, size=2) +
   geom_smooth(method = "lm")+
   scale_fill_brewer(name="",palette = "Dark2") +
   theme_bw() +
