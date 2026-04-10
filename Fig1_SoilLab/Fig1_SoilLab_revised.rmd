@@ -143,6 +143,7 @@ aes(y=Variable*1.1, label=L1), size=9, position = position_dodge(width = 1))
 ```
 
 Create the linear model with year as fixed effect 
+
 ```{r}
 fixed_effects=list()
 for(i in unique(paste0(nutrients4$Nutrient))){
@@ -164,7 +165,8 @@ png(filename1, width = 1200, height = 600)
 dev.off()
 
 #Apply Bootstrap for inferring p-values and 95% CI
-boot.out = Boot(file2_fixed, f=coef, method="residual", R=10000, ncores = 25) 
+
+boot.out = Boot(file2_fixed, f=coef, method="residual", R=10000)#, ncores = 25) # Use only if you have a multicore Linux system.
 print("Boot  finished")
   
 CI.lower = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.025, na.rm=TRUE)))
