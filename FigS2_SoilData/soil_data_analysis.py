@@ -32,6 +32,6 @@ fig.text(0.5, 0.91, '(Baseline: 2009; Analysis Period: 2019 — 2021)', ha='cent
 fig.text(0.5, 0.03, 'Experimental Year', ha='center', va='center', fontsize=13)
 
 plt.subplots_adjust(hspace=0.2, top=0.88, bottom=0.12, right=0.8)
-plt.savefig('SoilData2009.jpg', format='jpeg', dpi=300)
+plt.savefig('FigS2_SoilData.jpg', format='jpeg', dpi=300)
 plt.show()
 

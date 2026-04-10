@@ -15,6 +15,8 @@ library(lme4)
 library(ggtext)
 library(boot)
 library(car)
+library(dunn.test)
+library(multcompView)
 ```
 
 Upload the nutrient table
@@ -140,7 +142,7 @@ plot1 = ggplot(data=nutrients5,
 aes(y=Variable*1.1, label=L1), size=9, position = position_dodge(width = 1))
 ```
 
-Create the mixed effect model function with year as random effect 
+Create the linear model with year as fixed effect 
 ```{r}
 fixed_effects=list()
 for(i in unique(paste0(nutrients4$Nutrient))){
@@ -153,11 +155,9 @@ for(i in unique(paste0(nutrients4$Nutrient))){
   
 file2_fixed <- lm(Variable~TILLAGE2*FERTILIZATION2*as.factor(Experimental_Year), data=file1)
 
-filename1= paste0("QQ_Plots_",gsub(".%.","",i),".png")
+filename1= paste0("../FigS3_QQPlot", "/QQ_Plots_",gsub(".%.","",i),".png")
 png(filename1, width = 1200, height = 600)
 
-  par(mfrow = c(1, 2))
-  
   qqnorm(resid(file2_fixed))
   qqline(resid(file2_fixed), col = "red")
  
