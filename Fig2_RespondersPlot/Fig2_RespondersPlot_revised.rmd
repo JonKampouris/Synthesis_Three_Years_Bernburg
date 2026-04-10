@@ -16,6 +16,7 @@ library(RColorBrewer) # LMM for compositional Microbiome data, Version 1.2
 library(ggvenn)
 library(gridExtra)
 library(Biostrings)
+library(compositions)
 ```
 Differential abundance
 Load the tables
