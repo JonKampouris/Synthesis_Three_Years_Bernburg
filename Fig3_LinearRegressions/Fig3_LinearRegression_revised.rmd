@@ -280,7 +280,7 @@ bulk soil
 # Start Year 2019 
 memodel_RAS_CT_2019 <- lm(scale(OM)~scale(sum) , data = RAS_CT_data16S_2019)
 
-boot.out = Boot(memodel_RAS_CT_2019, f=coef, method="residual", R=10000, ncores = 25)
+boot.out = Boot(memodel_RAS_CT_2019, f=coef, method="residual", R=10000, )#, ncores = 25) # Use only if you have a multicore Linux system.
 print("Boot  finished")
   
 CI.lower = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.025, na.rm=TRUE)))
@@ -296,7 +296,7 @@ results_RAS_CT_2019=cbind(results_df_RAS_CT_2019, pvalues, lower=CI.lower, upper
 # Start Year 2020
 memodel_RAS_CT_2020 <- lm(scale(OM)~scale(sum), data = RAS_CT_data16S_2020)
 
-boot.out = Boot(memodel_RAS_CT_2020, f=coef, method="residual", R=10000, ncores = 25)
+boot.out = Boot(memodel_RAS_CT_2020, f=coef, method="residual", R=10000, )#, ncores = 25) # Use only if you have a multicore Linux system.
 print("Boot  finished")
   
 CI.lower = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.025, na.rm=TRUE)))
@@ -312,7 +312,7 @@ results_RAS_CT_2020=cbind(results_df_RAS_CT_2020, pvalues, lower=CI.lower, upper
 # Start Year 2021 
 memodel_RAS_CT_2021 <- lm(scale(OM)~scale(sum), data = RAS_CT_data16S_2021)
 
-boot.out = Boot(memodel_RAS_CT_2021, f=coef, method="residual", R=10000, ncores = 25)
+boot.out = Boot(memodel_RAS_CT_2021, f=coef, method="residual", R=10000, )#, ncores = 25) # Use only if you have a multicore Linux system.
 print("Boot  finished")
   
 CI.lower = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.025, na.rm=TRUE)))
@@ -335,7 +335,7 @@ the rhizosphere
 # Start Year 2019 
 memodel_RH_CT_2019 <- lm(scale(OM)~scale(sum), data = RH_CT_data16S_2019)
 #Apply Bootstrap for inferring p-values and 95% CI
-boot.out = Boot(memodel_RH_CT_2019, f=coef, method="residual", R=10000, ncores = 25)
+boot.out = Boot(memodel_RH_CT_2019, f=coef, method="residual", R=10000, )#, ncores = 25) # Use only if you have a multicore Linux system.
 print("Boot  finished")
   
 CI.lower = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.025, na.rm=TRUE)))
@@ -351,7 +351,7 @@ results_RH_CT_2019=cbind(results_df_RH_CT_2019, pvalues, lower=CI.lower, upper=C
 # Start Year 2020
 memodel_RH_CT_2020 <- lm(scale(OM)~scale(sum), data = RH_CT_data16S_2020)
 #Apply Bootstrap for inferring p-values and 95% CI
-boot.out = Boot(memodel_RH_CT_2020, f=coef, method="residual", R=10000, ncores = 25)
+boot.out = Boot(memodel_RH_CT_2020, f=coef, method="residual", R=10000, )#, ncores = 25) # Use only if you have a multicore Linux system.
 print("Boot  finished")
   
 CI.lower = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.025, na.rm=TRUE)))
@@ -367,7 +367,7 @@ results_RH_CT_2020=cbind(results_df_RH_CT_2020, pvalues, lower=CI.lower, upper=C
 # Start Year 2021 
 memodel_RH_CT_2021 <- lm(scale(OM)~scale(sum), data = RH_CT_data16S_2021)
 #Apply Bootstrap for inferring p-values and 95% CI
-boot.out = Boot(memodel_RH_CT_2021, f=coef, method="residual", R=10000, ncores = 25)
+boot.out = Boot(memodel_RH_CT_2021, f=coef, method="residual", R=10000, )#, ncores = 25) # Use only if you have a multicore Linux system.
 print("Boot  finished")
   
 CI.lower = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.025, na.rm=TRUE)))
@@ -390,7 +390,7 @@ the bulk soil
 # Start Year 2019 
 memodel_RAS_MP_2019 <- lm(scale(OM)~scale(sum), data = RAS_MP_data16S_2019)
 #Apply Bootstrap for inferring p-values and 95% CI
-boot.out = Boot(memodel_RAS_MP_2019, f=coef, method="residual", R=10000, ncores = 25)
+boot.out = Boot(memodel_RAS_MP_2019, f=coef, method="residual", R=10000, )#, ncores = 25) # Use only if you have a multicore Linux system.
 print("Boot  finished")
   
 CI.lower = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.025, na.rm=TRUE)))
@@ -406,7 +406,7 @@ results_RAS_MP_2019=cbind(results_df_RAS_MP_2019, pvalues, lower=CI.lower, upper
 # Start Year 2020
 memodel_RAS_MP_2020 <- lm(scale(OM)~scale(sum), data = RAS_MP_data16S_2020)
 #Apply Bootstrap for inferring p-values and 95% CI
-boot.out = Boot(memodel_RAS_MP_2020,f=coef, method="residual", R=10000, ncores = 25)
+boot.out = Boot(memodel_RAS_MP_2020,f=coef, method="residual", R=10000, )#, ncores = 25) # Use only if you have a multicore Linux system.
 print("Boot  finished")
   
 CI.lower = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.025, na.rm=TRUE)))
@@ -422,7 +422,7 @@ results_RAS_MP_2020=cbind(results_df_RAS_MP_2020, pvalues, lower=CI.lower, upper
 # Start Year 2021 
 memodel_RAS_MP_2021 <- lm(scale(OM)~scale(sum), data = RAS_MP_data16S_2021)
 #Apply Bootstrap for inferring p-values and 95% CI
-boot.out = Boot(memodel_RAS_MP_2021,f=coef, method="residual", R=10000, ncores = 25)
+boot.out = Boot(memodel_RAS_MP_2021,f=coef, method="residual", R=10000, )#, ncores = 25) # Use only if you have a multicore Linux system.
 print("Boot  finished")
   
 CI.lower = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.025, na.rm=TRUE)))
@@ -445,7 +445,7 @@ the rhizosphere
 # Start Year 2019 
 memodel_RH_MP_2019 <- lm(scale(OM)~scale(sum), data = RH_MP_data16S_2019)
 #Apply Bootstrap for inferring p-values and 95% CI
-boot.out = Boot(memodel_RH_MP_2019, f=coef, method="residual", R=10000, ncores = 25) 
+boot.out = Boot(memodel_RH_MP_2019, f=coef, method="residual", R=10000, )#, ncores = 25) # Use only if you have a multicore Linux system. 
 print("Boot  finished")
   
 CI.lower = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.025, na.rm=TRUE)))
@@ -461,7 +461,7 @@ results_RH_MP_2019=cbind(results_df_RH_MP_2019, pvalues, lower=CI.lower, upper=C
 # Start Year 2020 
 memodel_RH_MP_2020 <- lm(scale(OM)~scale(sum) , data = RH_MP_data16S_2020)
 #Apply Bootstrap for inferring p-values and 95% CI
-boot.out = Boot(memodel_RH_MP_2020, , f=coef, method="residual", R=10000, ncores = 25)  
+boot.out = Boot(memodel_RH_MP_2020, , f=coef, method="residual", R=10000, )#, ncores = 25) # Use only if you have a multicore Linux system.  
 print("Boot  finished")
   
 CI.lower = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.025, na.rm=TRUE)))
@@ -477,7 +477,7 @@ results_RH_MP_2020=cbind(results_df_RH_MP_2020, pvalues, lower=CI.lower, upper=C
 # Start Year 2021 
 memodel_RH_MP_2021 <-lm(scale(OM)~scale(sum), data = RH_MP_data16S_2021)
 #Apply Bootstrap for inferring p-values and 95% CI
-boot.out = Boot(memodel_RH_MP_2021, f=coef, method="residual", R=10000, ncores = 25) 
+boot.out = Boot(memodel_RH_MP_2021, f=coef, method="residual", R=10000, )#, ncores = 25) # Use only if you have a multicore Linux system. 
 print("Boot  finished")
   
 CI.lower = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.025, na.rm=TRUE)))
@@ -818,10 +818,11 @@ plot_results_RH_MP_2021=ggplot(RH_MP_data16S_2021,
           "], *p* < 0.0001")) 
 # End Year 2021
 ```
-
+##############################################################
+##Can you make the plot somehow 3 x 4, instead 6 x please?##
+###########################################################
 Combine all plots together
 ```{r}
-
 # *p* < 0.0001 muss in den Header 
 empty_space <- ggplot() + theme_void()
 
