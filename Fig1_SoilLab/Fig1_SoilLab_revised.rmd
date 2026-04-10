@@ -159,8 +159,8 @@ file2_fixed <- lm(Variable~TILLAGE2*FERTILIZATION2*as.factor(Experimental_Year),
 filename1= paste0("../FigS3_QQPlot", "/QQ_Plots_",gsub(".%.","",i),".png")
 png(filename1, width = 1200, height = 600)
 
-  qqnorm(resid(file2_fixed))
-  qqline(resid(file2_fixed), col = "red")
+  qqnorm(resid(file2_fixed), main=paste("Normal Q-Q Plot for",i))
+  qqline(resid(file2_fixed), col="red")
  
 dev.off()
 
