@@ -233,7 +233,7 @@ plot_2021 <- ggarrange(plot_pos_2021, plot_neg_2021, ncol=2, labels=c("MP-respon
 
 plotVenn <- ggarrange(plot_2019, plot_2020, plot_2021, nrow=3, labels=c("2019", "2020", "2021"), font.label=list(size=16, face="bold"))
 
-png(filename = "Fig2_RespondersVenn_revised.png", height=3000, width=2750, res=300)
+png(filename = file.path("../FigS4_VennDiagrams", "FigS4_VennDiagrams.png"), height=3000, width=2750, res=300)
 print(plotVenn) 
 dev.off()
 
@@ -290,20 +290,6 @@ plots_common=ggarrange(plot_pos_BS,plot_pos_RH,
 png(filename = "../OutputData/SI_Venns_common_in_three_years.png", height = 3000, width = 4000, res=300)
 print(plots_common) 
 dev.off()
-```
-Combine all plot1 and plotVenn
-
-```{r}
-
-plots=ggarrange(plotPhylum,plotVenn, 
-  labels = c("A)","B)"),
-  font.label = list(face="bold",size=25), 
-  ncol=2, nrow=1)
-
-png(filename = "Fig2_RespondersPlot_revised.png", height = 7000, width = 14000, res=300)
-print(plots) 
-dev.off()
-
 ```
 
 The End
