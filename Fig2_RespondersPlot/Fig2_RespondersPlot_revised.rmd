@@ -17,6 +17,8 @@ library(ggvenn)
 library(gridExtra)
 library(Biostrings)
 library(compositions)
+library(vegan)
+
 ```
 Differential abundance
 Load the tables
@@ -295,6 +297,78 @@ png(filename = "../FigS5_VennDiagrams/SI_Venns_common_in_three_years.png", heigh
 print(plots_common) 
 dev.off()
 ```
+
+````{r}
+perm_list=list()
+for (i in unique(metadata$Group)){
+  file1=filter(metadata, Group==paste0(i) )
+  input1=(as.data.frame(ASVtable1[file1$ID,]))
+  input1=apply(input1, 1, function (x) 100*x/sum(x))%>%t()
+input2=data.frame(RA= apply(input1, 2, function (x) mean(x)))
+input2=input2[order(input2$RA,decreasing =T),,drop=F]
+input2=input2[1:50,,drop=F]
+dist1=vegdist(input1, method = "bray")
+dist2=vegdist(input1[,rownames(input2)], method = "bray")
+
+perm1=as.data.frame(
+  adonis2(dist1~Tillage*Int, data = file1, method = "bray", permutations = 99999, by="terms")
+  )%>%na.omit()%>%rownames_to_column(var="Var")%>%mutate(Soil_Type=
+ unique(file1$Soil_Type),
+ Year=
+ unique(file1$Year),Type="Full Community")
+
+perm2=as.data.frame(
+  adonis2(dist2~Tillage*Int, data = file1, method = "bray", permutations = 99999, by="terms")
+  )%>%na.omit()%>%rownames_to_column(var="Var")%>%mutate(Soil_Type=
+ unique(file1$Soil_Type),
+ Year=
+ unique(file1$Year),
+                                                         Type="Dominant Fraction")
+
+perm_list=rbind(perm1,perm_list)
+perm_list=rbind(perm2,perm_list)
+print(i)
+}
+perm_list$Variable=gsub("Tillage", "CT vs MP Tillage", 
+                        gsub("Int",
+  "Ext. vs Int. N-Fert.",
+  gsub(
+       "Tillage:Int",
+                        "interaction effect",perm_list$Var)
+))
+perm_list$Variable=gsub(
+       "interaction effect",
+                        "Interaction effect",perm_list$Variable)
+
+perm_list$padj=p.adjust(perm_list$`Pr(>F)`, method = "BH")
+
+perm_list$padj2=perm_list$padj
+perm_list$padj2[perm_list$padj>0.05]=""
+perm_list$padj2[perm_list$padj<0.05]="*"
+perm_list$padj2[perm_list$padj<0.01]="**"
+perm_list$padj2[perm_list$padj<0.001]="***"
+perm_list$padj2[perm_list$padj<0.0001]="****"
+perm_list$Type=factor(perm_list$Type,
+                      level=c("Full Community",
+                              "Dominant Fraction" ))
+
+perm_list$Type=factor(perm_list$Type,
+                      level=c("Full Community",
+                              "Dominant Fraction" ))
+
+perm_list$Variable=factor(perm_list$Variable,
+                          levels = c( "Interaction effect",
+                                      "Ext. vs Int. N-Fert." ,
+                            "CT vs MP Tillage"
+                          ))
+
+p1=ggplot(perm_list,aes(x=paste(Soil_Type, Year), y=Variable, fill=100*R2))+
+  geom_tile(colour="black")+facet_wrap(~Type)+
+  scale_fill_distiller(palette = "RdBu", name="Exp. Var (%)")+
+  geom_text(aes(label=padj2))
+
+````
+
 
 The End
 ```{r}
