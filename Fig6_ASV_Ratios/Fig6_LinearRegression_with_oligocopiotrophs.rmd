@@ -200,7 +200,7 @@ plots1=ggarrange(plotdiff,plotcor, common.legend = T, nrow= 1, legend = "right",
 
 ```{r}
 png(filename="Figure6.png",
-      height = 2000,
+      height = 3000,
       width = 4000, 
       res=250
     )

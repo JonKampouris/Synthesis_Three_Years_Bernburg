@@ -1,7 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns 
-#import matplotlib.patches as patches
+import matplotlib.patches as patches
 
 df_soil = pd.read_excel("SoilData_2009_2019-2021.xlsx", dtype={'Experimental_Year': str})
 
@@ -35,16 +35,21 @@ fig.text(0.5, 0.03, 'Experimental Year', ha='center', va='center', fontsize=13)
 plt.subplots_adjust(hspace=0.2, top=0.88, bottom=0.12, right=0.8)
 
 
-#def add_break(ax, start, end, y=0, height=0.05):
-#    trans = ax.get_xaxis_transform()
-#    line = patches.FancyBboxPatch((start, y), end-start, height, boxstyle="square,pad=0", transform=trans, color='black')
-#    ax.add_patch(line)
+def add_break(ax, start, end, y=0, height=0.001):
+    trans = ax.get_xaxis_transform()
+    line = patches.FancyBboxPatch(
+        (start, y), end - start, height, 
+        boxstyle="roundtooth,pad=0.025",
+        transform=trans, 
+        color='grey', clip_on=False
+    )
+    ax.add_patch(line)
 
-#break_pos1 = 0.5
-#break_pos2 = 1.5
+break_pos1 = 0.475
+break_pos2 = 0.525
 
-#add_break(ax1, break_pos1, break_pos2)
-#add_break(ax2, break_pos1, break_pos2)
+add_break(ax1, break_pos1, break_pos2)
+add_break(ax2, break_pos1, break_pos2)
 
 plt.savefig('FigS2_SoilData.jpg', format='jpeg', dpi=300)
 plt.show()
