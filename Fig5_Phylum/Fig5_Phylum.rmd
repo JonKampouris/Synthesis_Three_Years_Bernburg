@@ -263,7 +263,7 @@ cazygenes2=cazygenes
 cazygenes2=filter(cazygenes2, Soil_Type=="BS")
 
 plot5 = ggplot(cazygenes2, 
-  aes(fill=tax.Phylum, x=till2, y=(log10( Sach_genes)))) +
+  aes(fill=tax.Phylum, x=till2, y=(log10( CazymeGenes+1)))) +
   geom_jitter(position = position_jitterdodge(jitter.width = 0.1,dodge.width = 1),size=3, shape=21) +
   geom_violin(alpha=0.5, position = position_dodge(width = 1)) +
     geom_boxplot(alpha=0.5, position = position_dodge(width = 1)) +
@@ -373,7 +373,7 @@ Genome_Count_Per_Phylum=data.frame(No=table(paste0(
 
 Combine plots
 ```{r}
-plots=ggarrange(plot2,plot4,plot6, 
+plots=ggarrange(plot2,plot4,plot6,  common.legend = T,
   labels = c("A)","B)","C)"),
   font.label = list(face="bold", size=25),ncol =  1)
   
@@ -381,8 +381,8 @@ plots=ggarrange(plot2,plot4,plot6,
 
 Save plot
 ```{r}
-png(filename = "Fig5_Phylum.png", height = 6500,
-    width = 5000, res=200)
+png(filename = "Fig5_Phylum.png", height = 6000,
+    width = 4500, res=200)
 print(plots)
 dev.off()
 ```

@@ -22,7 +22,6 @@ library(vegan)
 library(parallel)
 library(Biostrings)
 library(gRodon)
-library(introdataviz)
 ```
 
 wget https://data.gtdb.ecogenomic.org/releases/release202/202.0/genomic_files_reps/bac120_ssu_reps_r202.tar.gz
