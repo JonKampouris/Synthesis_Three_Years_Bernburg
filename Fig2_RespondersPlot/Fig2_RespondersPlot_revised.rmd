@@ -363,11 +363,34 @@ perm_list$Variable=factor(perm_list$Variable,
                           ))
 
 p1=ggplot(perm_list,aes(x=paste(Soil_Type, Year), y=Variable, fill=100*R2))+
-  geom_tile(colour="black")+facet_wrap(~Type)+
+  geom_tile(colour="black")+facet_wrap(~Type, ncol=1)+
   scale_fill_distiller(palette = "RdBu", name="Exp. Var (%)")+
-  geom_text(aes(label=padj2))
+  geom_text(aes(label=padj2), size=10)+
+  xlab("")+
+  ylab("")+
+  theme_bw()+
+  theme(strip.background=element_rect(fill="white",colour="white")) +
+  theme(strip.text=element_text(size=25,colour="black")) +
+  
+  theme(axis.text.y=element_text(size=25,colour="black")) +
+  theme(axis.text.x=element_text(size=25,colour="black")) +
+  theme(axis.title.x=element_text(size=25,colour="black")) +
+  
+  theme(legend.text=element_text(size=25,colour="black")) + 
+  theme(legend.title=element_text(size=25,colour="black")) + 
+  theme(legend.position="top",axis.title.y=element_text(size=25,colour="black")) + 
+  theme(legend.key.size=unit(2,"cm"))
 
 ````
+
+
+```{r}
+dir.create(file.path("../FigS6_permanovaplots"), showWarnings = FALSE)
+
+png(filename = "../FigS6_permanovaplots/PERMANOVA_PLOTS_full_community_and_Dominant_fraction_in_three_years.png", height = 4000, width = 4000, res=300)
+print(p1) 
+dev.off()
+```
 
 
 The End
