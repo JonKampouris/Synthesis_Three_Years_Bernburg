@@ -170,6 +170,16 @@ theme(legend.position = "right")+facet_wrap(~equal)
 ```
 
 ```{r}
+RAS_RH_Ratio_data16S_BS=filter(RAS_RH_Ratio_data16S2, Soil_Type=="BS")
+RAS_RH_Ratio_data16S_BS_rho=cor.test(RAS_RH_Ratio_data16S_BS$OM,RAS_RH_Ratio_data16S_BS$Ratio, method = "spearman")
+RAS_RH_Ratio_data16S_RH=filter(RAS_RH_Ratio_data16S2, Soil_Type=="RH")
+RAS_RH_Ratio_data16S_RH_rho=cor.test(RAS_RH_Ratio_data16S_RH$OM,RAS_RH_Ratio_data16S_RH$Ratio, method = "spearman")
+correlations1=data.frame(Soil_Type=c("BS","RH"),
+rho=c(round(RAS_RH_Ratio_data16S_BS_rho$estimate,2),
+round(RAS_RH_Ratio_data16S_RH_rho$estimate,2)),
+p_values=c(round(RAS_RH_Ratio_data16S_BS_rho$p.value,4),
+round(RAS_RH_Ratio_data16S_RH_rho$p.value,4)))
+write.csv(correlations1,file ="../OutputData/SOM_RATIO_Slow_Fast_growers_Total_Spearman_rho.csv")
 plotcor=
 ggplot(RAS_RH_Ratio_data16S2, 
   aes(x=OM, y=Ratio,  fill= paste(Tillage))) +
@@ -194,6 +204,7 @@ ggplot(RAS_RH_Ratio_data16S2,
   scale_color_brewer(palette = "Dark2", name="")+
   facet_wrap(~Soil_Type, nrow=2)
 plots1=ggarrange(plotdiff,plotcor, common.legend = T, nrow= 1, legend = "right", labels = c("A)","B)"),font.label = list(size=20))
+
 ```
 
 
@@ -358,7 +369,7 @@ dev.off()
 ```
 
 ````{r}
-path="../../MS7_all_dbcan_files"
+path="../../all_dbcan_files"
 list1=list.files(path, pattern="*txt", recursive = TRUE)
 all_dbcans=function(x) {
 path_to_genome <- paste0(path, "/",list1[x])

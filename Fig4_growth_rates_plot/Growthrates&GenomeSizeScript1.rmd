@@ -87,7 +87,7 @@ while read i;
 done
 
 ```{r, warning=FALSE}
-path="/vol/IDK3/MS7_new/MS7_all_prokka_files"
+path="/../../all_prokka_files"
 list1=list.files(path, pattern="*ffn", recursive = TRUE)
 
 all_pds=function(x) {
@@ -117,7 +117,7 @@ write.csv(file = "../OutputData/All_Growth_Rates_for_All_mapped_ASVs.csv",
 ```
 
 ```{r}
-path="/vol/IDK3/MS7_new/MS7_all_dbcan_files"
+path="/../../_all_dbcan_files"
 list1=list.files(path, pattern="*txt", recursive = TRUE)
 
 all_dbcans=function(x) {
