@@ -39,8 +39,8 @@ GRfilesB=GRfiles
 GRfilesB$Group="All Years Together"
 GRfilesC=rbind(GRfilesB,GRfiles)
 GRfilesC$Group=factor(GRfilesC$Group,
-levels = c("All Years Together", "2020",
-           "2021","2019"  ))
+levels = c("All Years Together", "2021",
+           "2020","2019"  ))
 
 
 plot1 = ggplot(GRfilesC, 
@@ -137,8 +137,8 @@ CZfilesB$Group="All Years Together"
 CZfilesC=rbind(CZfilesB,matches2)
 
 CZfilesC$Group=factor(CZfilesC$Group,
-levels = c("All Years Together", "2020",
-           "2021","2019"  ))
+levels = c("All Years Together", "2021",
+           "2020","2019"  ))
 
 plot3 = ggplot(CZfilesC, 
   aes( y=log10(CazymeGenes),
