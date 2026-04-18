@@ -51,6 +51,10 @@ nutrients3=gather(nutrients1,
 
 nutrients4= nutrients3 %>% filter(Nutrient %in% c("N[%]", "OM[%]"))
 nutrients4$G=paste0(nutrients4$Tillage,";", nutrients4$Fertilization)
+
+nutrients4$Nutrient=gsub("OM\\[%\\]","SOM (%)",
+  gsub("N\\[%\\]", "N (%)", nutrients4$Nutrient)
+)
 ```
 Dunn's test for Nitrogen and Carbon 
 ```{r}
@@ -91,24 +95,10 @@ nutrients4$Fertilization=gsub("extensive","Ext.",
   gsub("intensive", "Int.", nutrients4$Fertilization)
 )
 
-nutrients4$Nutrient_label=factor(
-  nutrients4$Nutrient,
-  levels = c("OM[%]","N[%]"),
-  labels = c(expression(paste("SOM (%)")),
-              expression(paste("N (%)"))
-            )
-)
-
 nutrients5<-dcast(nutrients4, Experimental_Year+Tillage+G+Fertilization+Nutrient~., 
                   value.var =  "Variable", mean)%>%select(Variable=".",
                                              everything())%>%full_join(Letter_list)
 
-nutrients5$Nutrient_label=factor(
-  nutrients5$Nutrient,
-  levels = c("OM[%]","N[%]"),
-  labels = c(expression(paste("SOM (%)")),
-              expression(paste("N (%)"))
-            ))
 
 plot1 = ggplot(data=nutrients5, 
            aes(x = as.factor(Experimental_Year), y=Variable, fill=paste0(Tillage,"-",Fertilization))) +
@@ -119,7 +109,7 @@ plot1 = ggplot(data=nutrients5,
              position=position_jitterdodge (jitter.width=0.25,
                                             dodge.width =0.9 ), shape=21,
              alpha=0.7, size=2) +
-  facet_wrap(~Nutrient_label, strip.position="left", scales="free", labeller=label_parsed) +
+  facet_wrap(~Nutrient, strip.position="left", scales="free", labeller=label_value) +
   scale_alpha_manual(values = c(1, 0.1), name="N. Fert.: ") +
   scale_fill_manual(values = c("#c8e9df","#4ab795", "#fdb79c",  "#fb6328"), name="") +
   theme_bw() +
@@ -156,7 +146,7 @@ for(i in unique(paste0(nutrients4$Nutrient))){
   
 file2_fixed <- lm(Variable~TILLAGE2*FERTILIZATION2*as.factor(Experimental_Year), data=file1)
 
-filename1= paste0("../FigS3_QQPlot", "/QQ_Plots_",gsub(".%.","",i),".png")
+filename1= paste0("../FigS3_QQPlot", "/QQ_Plots_",gsub(" .%.","",i),".png")
 png(filename1, width = 1200, height = 600)
 
   qqnorm(resid(file2_fixed), main=paste("Normal Q-Q Plot for",i))
@@ -201,12 +191,6 @@ fixed_effects2$Variable=gsub("FERTILIZATION2",
 fixed_effects2$Variable=gsub(")",
      " ",gsub("as.factor.",
               " ",fixed_effects2$Variable))
-
-fixed_effects2$Nutrient <- gsub("\\[", "(", fixed_effects2$Nutrient)
-fixed_effects2$Nutrient <- gsub("\\]", ")", fixed_effects2$Nutrient)
-fixed_effects2$Nutrient <- gsub("OM", "SOM", fixed_effects2$Nutrient)
-
-
 ```
 
 ```{r}  
