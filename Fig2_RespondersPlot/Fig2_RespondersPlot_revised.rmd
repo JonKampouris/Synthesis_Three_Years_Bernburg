@@ -283,10 +283,10 @@ plot_neg_RH= ggvenn(data_neg_RH,
 
 
 plots_common=ggarrange(plot_pos_BS,plot_pos_RH,
-  plot_neg_BS,plot_neg_RH, labels = c("Pos. Resp. BS",
-                                      "Pos. Resp. RH",
-                                      "Neg. Resp. BS",
-                                      "Neg. Resp. RH"))
+  plot_neg_BS,plot_neg_RH, labels = c("MP-responders (positive) BS",
+                                      "MP-responders (positive) RH",
+                                      "CT-responders (negative) BS",
+                                      "CT-responders (negative) RH"))
 
 ```
 
