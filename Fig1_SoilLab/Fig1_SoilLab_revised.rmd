@@ -143,32 +143,29 @@ for(i in unique(paste0(nutrients4$Nutrient))){
   file1$Variable=scale(file1$Variable)
   # Add p_value for the model with Experimental_Year as fixed effect
   file2_fixed=lm(Variable~TILLAGE2*FERTILIZATION2*as.factor(Experimental_Year), data=file1)
-  
-file2_fixed <- lm(Variable~TILLAGE2*FERTILIZATION2*as.factor(Experimental_Year), data=file1)
+  print(file2_fixed)
+    filename1= paste0("../FigS3_QQPlot", "/QQ_Plots_",gsub(" .%.","",i),".png")
+    png(filename1, width = 1200, height = 600)
+    
+      qqnorm(resid(file2_fixed), main=paste("Normal Q-Q Plot for",i))
+      qqline(resid(file2_fixed), col="red")
+     
+    dev.off()
 
-filename1= paste0("../FigS3_QQPlot", "/QQ_Plots_",gsub(" .%.","",i),".png")
-png(filename1, width = 1200, height = 600)
-
-  qqnorm(resid(file2_fixed), main=paste("Normal Q-Q Plot for",i))
-  qqline(resid(file2_fixed), col="red")
- 
-dev.off()
-
-#Apply Bootstrap for inferring p-values and 95% CI
-
-boot.out = Boot(file2_fixed, f=coef, method="residual", R=10000)#, ncores = 25) # Use only if you have a multicore Linux system.
-print("Boot  finished")
-  
-CI.lower = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.025, na.rm=TRUE)))
-CI.upper = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.975, na.rm=TRUE)))
-results_df = as.data.frame(summary(boot.out))
-p = rbind(
-    (1-apply(boot.out$t<0, 2, mean))*2,
-    (1-apply(boot.out$t>0, 2, mean))*2)
-pvalues=data.frame(pval= apply(p, 2, min))
-results_df2=cbind(results_df, pvalues, lower=CI.lower, upper=CI.upper)
-results_df2$Nutrient=paste0(i)
-fixed_effects=rbind(results_df2%>%rownames_to_column(var = "Variable"),fixed_effects)  
+  #Apply Bootstrap for inferring p-values and 95% CI
+  boot.out = Boot(file2_fixed, f=coef, method="residual", R=10000)#, ncores = 25) # Use only if you have a multicore Linux system.
+  print("Boot  finished")
+    
+  CI.lower = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.025, na.rm=TRUE)))
+  CI.upper = apply(boot.out$t, 2, function(x) as.numeric(quantile(x, probs=.975, na.rm=TRUE)))
+  results_df = as.data.frame(summary(boot.out))
+  p = rbind(
+      (1-apply(boot.out$t<0, 2, mean))*2,
+      (1-apply(boot.out$t>0, 2, mean))*2)
+  pvalues=data.frame(pval= apply(p, 2, min))
+  results_df2=cbind(results_df, pvalues, lower=CI.lower, upper=CI.upper)
+  results_df2$Nutrient=paste0(i)
+  fixed_effects=rbind(results_df2%>%rownames_to_column(var = "Variable"),fixed_effects)  
 }
 
 fixed_effects2=filter(fixed_effects,
@@ -234,7 +231,7 @@ dev.off()
 
 Save the rest of the data as SI table.
 ```{r}
-write.csv(file = file.path("../OutputData", "TableS2_SoilLab.csv"), filter(fixed_effects, Variable!="(Intercept)"))
+write.csv(file = file.path("../OutputData", "TableS2_SoilLab.csv"), filter(fixed_effects2, Variable!="(Intercept)"))
 ```
 
 ```{r}
