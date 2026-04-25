@@ -246,6 +246,7 @@ data_pos_BS <- list(
     "2020" = BS_pos_resp_2020$ASV,
     "2021" = BS_pos_resp_2021$ASV
 )
+
 data_pos_RH <- list(
      "2019" = RH_pos_resp_2019$ASV,
     "2020" = RH_pos_resp_2020$ASV,
@@ -254,9 +255,9 @@ data_pos_RH <- list(
 
 
 data_neg_BS <- list(
-     "2019" = BS_neg_resp_2019$tax.Genus,
-    "2020" = BS_neg_resp_2020$tax.Genus,
-    "2021" = BS_neg_resp_2021$tax.Genus
+     "2019" = BS_neg_resp_2019$ASV,
+    "2020" = BS_neg_resp_2020$ASV,
+    "2021" = BS_neg_resp_2021$ASV
 )
 data_neg_RH <- list(
      "2019" = RH_neg_resp_2019$ASV,
@@ -392,6 +393,34 @@ print(p1)
 dev.off()
 ```
 
+```{r}
+common_ones_pos_BS=as.data.frame(table(c(BS_pos_resp_2019$ASV,
+                                         BS_pos_resp_2020$ASV,
+                                         BS_pos_resp_2021$ASV)))%>%
+  filter(Freq>2)
+print(common_ones_pos_BS)
+
+common_ones_neg_BS=as.data.frame(table(c((BS_neg_resp_2019$ASV),
+                                         (BS_neg_resp_2020$ASV),
+                                         (BS_neg_resp_2021$ASV))))%>%
+  filter(Freq>2)
+
+print(common_ones_neg_BS)
+
+common_ones_pos_RH=as.data.frame(table(c(RH_pos_resp_2019$ASV,
+                                         RH_pos_resp_2020$ASV,
+                                         RH_pos_resp_2021$ASV)))%>%
+  filter(Freq>2)
+print(common_ones_pos_RH)
+
+common_ones_neg_RH=as.data.frame(table(c((RH_pos_resp_2019$ASV),
+                                         (RH_pos_resp_2020$ASV),
+                                         (RH_pos_resp_2021$ASV))))%>%
+  filter(Freq>2)
+
+print(common_ones_neg_RH)
+
+```
 
 The End
 ```{r}
