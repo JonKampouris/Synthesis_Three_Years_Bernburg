@@ -139,10 +139,10 @@ fixed_effects=list()
 for(i in unique(paste0(nutrients4$Nutrient))){
   file1=dplyr::filter(nutrients4, Nutrient==paste0(i)) 
   file1$G=paste0(file1$Fertilization,";",file1$Tillage)
-  file1$Experimental_Year=as.factor(file1$Experimental_Year)
+  file1$Experimental_Year=as.numeric(file1$Experimental_Year)
   file1$Variable=scale(file1$Variable)
   # Add p_value for the model with Experimental_Year as fixed effect
-  file2_fixed=lm(Variable~TILLAGE2*FERTILIZATION2*as.factor(Experimental_Year), data=file1)
+  file2_fixed=lm(Variable~TILLAGE2*FERTILIZATION2*Experimental_Year, data=file1)
   print(file2_fixed)
     filename1= paste0("../FigS3_QQPlot", "/QQ_Plots_",gsub(" .%.","",i),".png")
     png(filename1, width = 1200, height = 600)
@@ -185,9 +185,9 @@ fixed_effects2$Variable=gsub("FERTILIZATION2",
   gsub("TILLAGE2", "CT vs MP Tillage", fixed_effects2$Variable)
 )
 
-fixed_effects2$Variable=gsub(")",
-     " ",gsub("as.factor.",
-              " ",fixed_effects2$Variable))
+# fixed_effects2$Variable=gsub(")",
+#      " ",gsub("numeric",
+#               " ",fixed_effects2$Variable))
 ```
 
 ```{r}  
