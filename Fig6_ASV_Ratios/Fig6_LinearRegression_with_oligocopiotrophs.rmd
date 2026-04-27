@@ -185,12 +185,13 @@ ggplot(RAS_RH_Ratio_data16S2,
   aes(x=OM, y=Ratio,  fill= paste(Tillage))) +
   geom_point(shape=21, size=2) +
   geom_smooth(method = "lm")+
-  scale_fill_brewer(name="",palette = "Dark2") +
+  scale_fill_brewer(name="",palette="Dark2") +
   theme_bw() +
-  xlab("SOM") +
+  xlab("SOM (%)") +
   ylab("RA ratio of pred. fast/slow-growing bacterial ASVs") +
-  theme(strip.background=element_rect(fill="white",colour="white")) +
-  theme(strip.text=element_text(size=25,colour="black",angle = 0)) +
+  theme(strip.background=element_rect(fill="white",colour="black")) +
+  theme(strip.text=element_text(size=25,colour="black",angle=0)) +
+  theme(strip.text.y=element_text(angle=0, hjust=0)) +
   
   theme(axis.text.x=element_text(size=25,colour="black")) +
   theme(axis.title.x=element_text(size=25,colour="black")) +
@@ -200,9 +201,10 @@ ggplot(RAS_RH_Ratio_data16S2,
   theme(legend.position="right",
         axis.text.y=element_text(size=25,colour="black"),
         axis.title.y=element_text(size=25,colour="black")) + 
-  theme(legend.key.size=unit(2,"cm")) +stat_cor(method = "spearman", aes(colour = Tillage),size=7.5, cor.coef.name="ρ")+
-  scale_color_brewer(palette = "Dark2", name="")+
-  facet_wrap(~Soil_Type, strip.position = "right", nrow=2)
+  theme(legend.key.size=unit(2,"cm")) +
+  stat_cor(method="spearman", aes(colour=Tillage),size=7.5, cor.coef.name="ρ") +
+  scale_color_brewer(palette = "Dark2", name="") +
+  facet_wrap(~Soil_Type, strip.position="right", nrow=2) 
 
 plots1=ggarrange(plotdiff,plotcor, common.legend = T, nrow= 1, legend = "right", labels = c("A)","B)"),font.label = list(size=20))
 
@@ -335,12 +337,13 @@ ggplot(RAS_RH_Ratio_data16S2,
   aes(x=OM, y=Ratio,  fill= paste(Tillage))) +
   geom_point(shape=21, size=2) +
   geom_smooth(method = "lm")+
-  scale_fill_brewer(name="",palette = "Dark2") +
+  scale_fill_brewer(name="",palette="Dark2") +
   theme_bw() +
   xlab("SOM") +
   ylab("RA ratio: ASVs with above/below average pred. genome sizes") +
-  theme(strip.background=element_rect(fill="white",colour="white")) +
+  theme(strip.background=element_rect(fill="white",colour="black")) +
   theme(strip.text=element_text(size=25,colour="black",angle = 0)) +
+  theme(strip.text.y=element_text(angle=0, hjust=0)) +
   
   theme(axis.text.x=element_text(size=25,colour="black")) +
   theme(axis.title.x=element_text(size=25,colour="black")) +
@@ -350,9 +353,11 @@ ggplot(RAS_RH_Ratio_data16S2,
   theme(legend.position="right",
         axis.text.y=element_text(size=25,colour="black"),
         axis.title.y=element_text(size=25,colour="black")) + 
-  theme(legend.key.size=unit(2,"cm")) +stat_cor(method = "spearman", aes(colour = Tillage),size=7.5, cor.coef.name="ρ")+
-  scale_color_brewer(palette = "Dark2", name="")+
-  facet_wrap(~Soil_Type, strip.position = "right", nrow=2)
+  theme(legend.key.size=unit(2,"cm")) +
+  stat_cor(method="spearman", aes(colour=Tillage),size=7.5, cor.coef.name="ρ") +
+  scale_color_brewer(palette="Dark2", name="") +
+  facet_wrap(~Soil_Type, strip.position="right", nrow=2)
+
 plots2=ggarrange(plotdiff,plotcor, common.legend = T, nrow= 1, legend = "right", labels = c("A)","B)"),font.label = list(size=20))
 ```
 
