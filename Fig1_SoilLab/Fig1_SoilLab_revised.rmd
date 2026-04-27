@@ -184,6 +184,11 @@ fixed_effects2$Variable=gsub("FERTILIZATION2",
   "Ext. vs Int. N-fert.",
   gsub("TILLAGE2", "CT vs MP tillage", fixed_effects2$Variable)
 )
+
+fixed_effects2$Variable=gsub("Experimental_Year",
+  "Experimental year",fixed_effects2$Variable
+  )
+
 ```
 
 ```{r}  
