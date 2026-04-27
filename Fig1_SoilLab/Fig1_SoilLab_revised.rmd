@@ -139,7 +139,7 @@ fixed_effects=list()
 for(i in unique(paste0(nutrients4$Nutrient))){
   file1=dplyr::filter(nutrients4, Nutrient==paste0(i)) 
   file1$G=paste0(file1$Fertilization,";",file1$Tillage)
-  file1$Experimental_Year=as.numeric(file1$Experimental_Year)
+  file1$Experimental_Year=as.numeric(file1$Experimental_Year) - 2018
   file1$Variable=scale(file1$Variable)
   # Add p_value for the model with Experimental_Year as fixed effect
   file2_fixed=lm(Variable~TILLAGE2*FERTILIZATION2*Experimental_Year, data=file1)
