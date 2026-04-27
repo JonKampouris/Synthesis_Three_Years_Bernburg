@@ -227,7 +227,6 @@ print(ggarrange(plot1, plot2,
                 labels = c("A)","B)"), ncol = 1,
                 font.label = list(size = 24)))
 dev.off()
-
 ```
 
 Save the rest of the data as SI table.
