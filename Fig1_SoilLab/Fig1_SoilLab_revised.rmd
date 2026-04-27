@@ -181,13 +181,9 @@ fixed_effects2$Variable=gsub(":",
   " x ",fixed_effects2$Variable)
 
 fixed_effects2$Variable=gsub("FERTILIZATION2",
-  "Ext. vs Int. N-Fert.",
-  gsub("TILLAGE2", "CT vs MP Tillage", fixed_effects2$Variable)
+  "Ext. vs Int. N-fert.",
+  gsub("TILLAGE2", "CT vs MP tillage", fixed_effects2$Variable)
 )
-
-# fixed_effects2$Variable=gsub(")",
-#      " ",gsub("numeric",
-#               " ",fixed_effects2$Variable))
 ```
 
 ```{r}  
