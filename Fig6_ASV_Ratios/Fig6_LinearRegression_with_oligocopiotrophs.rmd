@@ -46,7 +46,7 @@ metadata=read.csv(file.path("../InputData", "metadata1.csv"))%>%na.omit()
 
 Create the Sequencer metadata based on the sample name
 ```{r}
-GRfiles=read.csv(file.path("../OutputData", "All_Growth_Rates_for_All_mapped_ASVs.csv"))
+GRfiles=read.csv(file.path("../OutputData", "TableS4_All_Growth_Rates_for_All_mapped_ASVs.csv"))
 GRfiles$ASV=GRfiles$V1
 GRfiles=dcast(GRfiles,ASV~.,value.var = "DoublingTime", mean)
 ```
@@ -202,7 +202,8 @@ ggplot(RAS_RH_Ratio_data16S2,
         axis.title.y=element_text(size=25,colour="black")) + 
   theme(legend.key.size=unit(2,"cm")) +stat_cor(method = "spearman", aes(colour = Tillage),size=7.5, cor.coef.name="ρ")+
   scale_color_brewer(palette = "Dark2", name="")+
-  facet_wrap(~Soil_Type, nrow=2)
+  facet_wrap(~Soil_Type, strip.position = "right", nrow=2)
+
 plots1=ggarrange(plotdiff,plotcor, common.legend = T, nrow= 1, legend = "right", labels = c("A)","B)"),font.label = list(size=20))
 
 ```
@@ -351,7 +352,7 @@ ggplot(RAS_RH_Ratio_data16S2,
         axis.title.y=element_text(size=25,colour="black")) + 
   theme(legend.key.size=unit(2,"cm")) +stat_cor(method = "spearman", aes(colour = Tillage),size=7.5, cor.coef.name="ρ")+
   scale_color_brewer(palette = "Dark2", name="")+
-  facet_wrap(~Soil_Type, nrow=2)
+  facet_wrap(~Soil_Type, strip.position = "right", nrow=2)
 plots2=ggarrange(plotdiff,plotcor, common.legend = T, nrow= 1, legend = "right", labels = c("A)","B)"),font.label = list(size=20))
 ```
 
@@ -512,7 +513,7 @@ ggplot(RAS_RH_Ratio_data16S2,
         axis.title.y=element_text(size=25,colour="black")) + 
   theme(legend.key.size=unit(2,"cm")) +stat_cor(method = "spearman", aes(colour = Tillage),size=7.5, cor.coef.name="ρ")+
   scale_color_brewer(palette = "Dark2", name="")+
-  facet_wrap(~Soil_Type, nrow=2)
+  facet_wrap(~Soil_Type, strip.position = "right", nrow=2)
 plots3=ggarrange(plotdiff,plotcor, common.legend = T, nrow= 1, legend = "right", labels = c("A)","B)"),font.label = list(size=20))
 ```
 
