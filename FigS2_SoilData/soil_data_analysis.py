@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns 
 import matplotlib.patches as patches
+import numpy as np
 
 df_soil = pd.read_excel("SoilData_2009_2019-2021.xlsx", dtype={'Experimental_Year': str})
 
@@ -18,15 +19,37 @@ palette = sns.color_palette("Set2")
 treatments = df_soil_grouped_reset['Treatment'].unique()
 fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(7, 8))
 
-sns.lineplot(data=df_soil_grouped_reset, x='Experimental_Year', y='N[%]', hue='Treatment', hue_order=treatments, ax=ax1, palette=palette[:4], marker='o')
+# Plot with lines that have a break at the gap markers
+def plot_with_gap(ax, data, y_col, treatments, palette):
+    """Plot lines with a visual gap between 2009 and 2019"""
+    # Get unique years
+    years = sorted(data['Experimental_Year'].unique())
+    year_positions = {year: i for i, year in enumerate(years)}
+    
+    for color_idx, treatment in enumerate(treatments):
+        treatment_data = data[data['Treatment'] == treatment].sort_values('Experimental_Year')
+        
+        # Get all data points
+        x_all = [year_positions[year] for year in treatment_data['Experimental_Year']]
+        y_all = treatment_data[y_col].values
+        
+        # Plot the full line
+        ax.plot(x_all, y_all, 'o-', color=palette[color_idx], label=treatment, linewidth=2, markersize=6)
+    
+    # Set x-axis labels and ticks
+    ax.set_xticks(range(len(years)))
+    ax.set_xticklabels(years)
+    
+    return len(years)
+
+plot_with_gap(ax1, df_soil_grouped_reset, 'N[%]', treatments, palette[:4])
 ax1.set_xlabel('')  
 ax1.set_ylabel('N (%)',  fontsize=13)
-ax1.legend(loc='center left', bbox_to_anchor=(1, -0.1), title='Treatment') 
+ax1.legend(loc='center left', bbox_to_anchor=(1, -0.1), title='Treatment')
 
-sns.lineplot(data=df_soil_grouped_reset, x='Experimental_Year', y='OM[%]', hue='Treatment', hue_order=treatments, ax=ax2, palette=palette[:4], marker='o')
+plot_with_gap(ax2, df_soil_grouped_reset, 'OM[%]', treatments, palette[:4])
 ax2.set_xlabel('')  
 ax2.set_ylabel('SOM (%)',  fontsize=13)
-ax2.get_legend().remove()
 
 #fig.suptitle('Trend Analysis of SOM and N\n(Baseline: 2009, Analysis Period: 2019—2021)', fontsize=14, y=0.95)
 fig.suptitle('Trend Analysis of SOM and N', fontsize=14, y=0.95)
@@ -35,60 +58,29 @@ fig.text(0.5, 0.03, 'Experimental Year', ha='center', va='center', fontsize=13)
 
 plt.subplots_adjust(hspace=0.2, top=0.88, bottom=0.12, right=0.8)
 
-
-def overlay_dashed_segment(ax, y_col):
-    tick_labels = [tick.get_text() for tick in ax.get_xticklabels()]
-    tick_positions = ax.get_xticks()
-    x_positions = {label: pos for label, pos in zip(tick_labels, tick_positions)}
-
-    for treatment in treatments:
-        treatment_data = df_soil_grouped_reset[df_soil_grouped_reset['Treatment'] == treatment]
-        y_start = treatment_data.loc[treatment_data['Experimental_Year'] == '2009', y_col].iloc[0]
-        y_end = treatment_data.loc[treatment_data['Experimental_Year'] == '2019', y_col].iloc[0]
-        x0, x1 = x_positions['2009'], x_positions['2019']
-        x_mid_start = x0 + 0.35 * (x1 - x0)
-        x_mid_end = x0 + 0.65 * (x1 - x0)
-        y_mid_start = y_start + 0.35 * (y_end - y_start)
-        y_mid_end = y_start + 0.65 * (y_end - y_start)
-        ax.plot([x_mid_start, x_mid_end], [y_mid_start, y_mid_end], linestyle='--', color='grey', linewidth=2.5, zorder=15)
-
-overlay_dashed_segment(ax1, 'N[%]')
-overlay_dashed_segment(ax2, 'OM[%]')
-
-
-def get_mid_segment_range(ax, x_start_label='2009', x_end_label='2019', frac_start=0.35, frac_end=0.65):
-    tick_labels = [tick.get_text() for tick in ax.get_xticklabels()]
-    tick_positions = ax.get_xticks()
-    x_positions = {label: pos for label, pos in zip(tick_labels, tick_positions)}
-    x0 = x_positions[x_start_label]
-    x1 = x_positions[x_end_label]
-    x_mid_start = x0 + frac_start * (x1 - x0)
-    x_mid_end = x0 + frac_end * (x1 - x0)
-    return x_mid_start, x_mid_end
-
-
-def draw_x_axis_dashed_segment(ax, color='grey'):
-    x_mid_start, x_mid_end = get_mid_segment_range(ax)
-    ax.plot([x_mid_start, x_mid_end], [0, 0], transform=ax.get_xaxis_transform(),
-            color=color, linestyle='--', linewidth=2.5,
-            zorder=20, clip_on=False)
-
-
-def draw_y0_dashed_line(ax, color='grey'):
+# Add gap markers (diagonal slashes) and break the lines
+def add_gap_with_broken_lines(ax):
+    """Add diagonal slash marks and break lines at the gap position"""
     ymin, ymax = ax.get_ylim()
-    if ymin <= 0 <= ymax:
-        x_mid_start, x_mid_end = get_mid_segment_range(ax)
-        xlim = ax.get_xlim()
-        start_frac = (x_mid_start - xlim[0]) / (xlim[1] - xlim[0])
-        end_frac = (x_mid_end - xlim[0]) / (xlim[1] - xlim[0])
-        ax.axhline(0, xmin=start_frac, xmax=end_frac, color=color,
-                   linestyle='--', linewidth=2.5, zorder=10)
+    y_range = ymax - ymin
+    x_gap = 0.5  # Position between 2009 (0) and 2019 (1)
+    
+    # Draw two diagonal lines to indicate a gap
+    ax.plot([x_gap - 0.08, x_gap - 0.02], [ymin - 0.02*y_range, ymin + 0.02*y_range], 
+            'k-', linewidth=1.5, clip_on=False, zorder=101)
+    ax.plot([x_gap + 0.02, x_gap + 0.08], [ymin - 0.02*y_range, ymin + 0.02*y_range], 
+            'k-', linewidth=1.5, clip_on=False, zorder=101)
+    
+    # Create a white rectangle to "break" the lines - spanning full height
+    gap_width = 0.25
+    from matplotlib.patches import Rectangle
+    rect = Rectangle((x_gap - gap_width/2, ymin), gap_width, y_range, 
+                      facecolor='white', edgecolor='white', linewidth=0, zorder=100)
+    ax.add_patch(rect)
 
-
-draw_x_axis_dashed_segment(ax1)
-draw_x_axis_dashed_segment(ax2)
-draw_y0_dashed_line(ax1)
-draw_y0_dashed_line(ax2)
+# Add gap markers and broken lines to both subplots
+add_gap_with_broken_lines(ax1)
+add_gap_with_broken_lines(ax2)
 
 plt.savefig('FigS2_SoilData.jpg', format='jpeg', dpi=300)
 plt.show()
