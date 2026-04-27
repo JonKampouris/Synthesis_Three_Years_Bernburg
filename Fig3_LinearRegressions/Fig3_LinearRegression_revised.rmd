@@ -51,7 +51,7 @@ ASVtaxonomy=read.csv(file.path("../InputData", "16SMLERarefied_table.csv"),row.n
   as.data.frame() %>%
   rownames_to_column(var="ASV")
 
-all_models_diff=read.csv(file.path("../OutputData", "TableS3_RespondersPlot.csv_revised"))
+all_models_diff=read.csv(file.path("../OutputData", "TableS3_RespondersPlot_revised.csv"))
 
 bac_rer_number=unique(colSums(ASVtaxonomy[,-1]))
 ```
@@ -503,7 +503,7 @@ plot_results_RAS_CT_2019=ggplot(RAS_CT_data16S_2019,
   geom_point(shape=21, size=2) +
   geom_smooth(method="lm", alpha=0.5) +
   ylab(NULL) +
-  xlab("2019: BS CT-responder") +
+  xlab("2019: BS CT-responders") +
   theme_bw() +
   scale_fill_brewer(palette="Set3", name="Fertilization: ") +
   
@@ -512,12 +512,14 @@ plot_results_RAS_CT_2019=ggplot(RAS_CT_data16S_2019,
  
   theme(strip.background=element_rect(fill="white",colour="black")) +
   
+  theme(plot.margin=margin(r=20, unit="points")) +
+  
   theme(axis.text.y=element_text(size=10,colour="black")) +
   theme(axis.text.x=element_text(size=10,colour="black")) +
   theme(axis.title.x=element_text(size=12,colour="black")) + 
 
-  theme(legend.text=element_text(size=18,colour="black")) + 
-  theme(legend.title=element_text(size=18,colour="black")) + 
+  theme(legend.text=element_text(size=15,colour="black")) + 
+  theme(legend.title=element_text(size=15,colour="black")) + 
   
   ggtitle(paste0("β1 = ",round(results_RAS_CT_2019[2,5],2),
           " [",round(results_RAS_CT_2019[2,7],2),
@@ -530,7 +532,7 @@ plot_results_RH_CT_2019=ggplot(RH_CT_data16S_2019,
   geom_point(shape=21, size=2) +
   geom_smooth(method="lm", alpha=0.5) +
   ylab(NULL) +
-  xlab("2019: RH CT-responder") +
+  xlab("2019: RH CT-responders") +
   theme_bw() +
   scale_fill_brewer(palette="Set3", name="Fertilization: ") +
   
@@ -539,12 +541,14 @@ plot_results_RH_CT_2019=ggplot(RH_CT_data16S_2019,
   
   theme(strip.background=element_rect(fill="white",colour="black")) +
   
+  theme(plot.margin=margin(r=20, unit="points")) +
+  
   theme(axis.text.y=element_text(size=10,colour="black")) +
   theme(axis.text.x=element_text(size=10,colour="black")) +
   theme(axis.title.x=element_text(size=12,colour="black")) + 
   
-  theme(legend.text=element_text(size=18,colour="black")) + 
-  theme(legend.title=element_text(size=18,colour="black")) + 
+  theme(legend.text=element_text(size=15,colour="black")) + 
+  theme(legend.title=element_text(size=15,colour="black")) + 
   
   ggtitle(paste0("β1 = ",round(results_RH_CT_2019[2,5],2),
           " [",round(results_RH_CT_2019[2,7],2),
@@ -556,7 +560,7 @@ plot_results_RAS_MP_2019=ggplot(RAS_MP_data16S_2019,
   geom_point(shape=21, size=2) +
   geom_smooth(method="lm", alpha=0.5) +
   ylab(NULL) +
-  xlab("2019: BS MP-responder") +
+  xlab("2019: BS MP-responders") +
   theme_bw() +
   scale_fill_brewer(palette="Set3", name="Fertilization: ") +
   
@@ -564,13 +568,15 @@ plot_results_RAS_MP_2019=ggplot(RAS_MP_data16S_2019,
   theme(plot.title=element_markdown()) +
   
   theme(strip.background=element_rect(fill="white",colour="black")) +
+  
+  theme(plot.margin=margin(r=20, unit="points")) +
 
   theme(axis.text.y=element_text(size=10,colour="black")) +
   theme(axis.text.x=element_text(size=10,colour="black")) +
   theme(axis.title.x=element_text(size=12,colour="black")) + 
   
-  theme(legend.text=element_text(size=18,colour="black")) + 
-  theme(legend.title=element_text(size=18,colour="black")) + 
+  theme(legend.text=element_text(size=15,colour="black")) + 
+  theme(legend.title=element_text(size=15,colour="black")) + 
   
   ggtitle(paste0("β1 = ",round(results_RAS_MP_2019[2,5],2),
           " [",round(results_RAS_MP_2019[2,7],2),
@@ -582,7 +588,7 @@ plot_results_RH_MP_2019=ggplot(RH_MP_data16S_2019,
   geom_point(shape=21, size=2) +
   geom_smooth(method="lm", alpha=0.5) +
   ylab(NULL) +
-  xlab("2019: RH MP-responder") +
+  xlab("2019: RH MP-responders") +
   theme_bw() +
   scale_fill_brewer(palette="Set3", name="Fertilization: ") +
   
@@ -591,12 +597,14 @@ plot_results_RH_MP_2019=ggplot(RH_MP_data16S_2019,
   
   theme(strip.background=element_rect(fill="white", colour="black")) +
   
+  theme(plot.margin=margin(r=20, unit="points")) +
+  
   theme(axis.text.y=element_text(size=10,colour="black")) +
   theme(axis.text.x=element_text(size=10,colour="black")) +
   theme(axis.title.x=element_text(size=12,colour="black")) + 
   
-  theme(legend.text=element_text(size=18,colour="black")) + 
-  theme(legend.title=element_text(size=18,colour="black")) + 
+  theme(legend.text=element_text(size=15,colour="black")) + 
+  theme(legend.title=element_text(size=15,colour="black")) + 
   
   ggtitle(paste0("β1 = ",round(results_RH_MP_2019[2,5],2),
           " [",round(results_RH_MP_2019[2,7],2),
@@ -610,7 +618,7 @@ plot_results_RAS_CT_2020=ggplot(RAS_CT_data16S_2020,
   geom_point(shape=21, size=2) +
   geom_smooth(method="lm", alpha=0.5) +
   ylab(NULL) +
-  xlab("2020: BS CT-responder") +
+  xlab("2020: BS CT-responders") +
   theme_bw() +
   scale_fill_brewer(palette="Set3", name="Fertilization: ") +
   
@@ -618,13 +626,15 @@ plot_results_RAS_CT_2020=ggplot(RAS_CT_data16S_2020,
   theme(plot.title=element_markdown()) +
   
   theme(strip.background=element_rect(fill="white",colour="black")) +
+  
+  theme(plot.margin=margin(r=20, unit="points")) +
 
   theme(axis.text.y=element_text(size=10,colour="black")) +
   theme(axis.text.x=element_text(size=10,colour="black")) +
   theme(axis.title.x=element_text(size=12,colour="black")) + 
   
-  theme(legend.text=element_text(size=18,colour="black")) + 
-  theme(legend.title=element_text(size=18,colour="black")) + 
+  theme(legend.text=element_text(size=15,colour="black")) + 
+  theme(legend.title=element_text(size=15,colour="black")) + 
   
   ggtitle(paste0("β1 = ",round(results_RAS_CT_2020[2,5],2),
           " [",round(results_RAS_CT_2020[2,7],2),
@@ -637,7 +647,7 @@ plot_results_RH_CT_2020=ggplot(RH_CT_data16S_2020,
   geom_point(shape=21, size=2) +
   geom_smooth(method="lm", alpha=0.5) +
   ylab(NULL) +
-  xlab("2020: RH CT-responder") +
+  xlab("2020: RH CT-responders") +
   theme_bw() +
   scale_fill_brewer(palette="Set3", name="Fertilization: ") +
   
@@ -646,12 +656,14 @@ plot_results_RH_CT_2020=ggplot(RH_CT_data16S_2020,
   
   theme(strip.background=element_rect(fill="white",colour="black")) +
   
+  theme(plot.margin=margin(r=20, unit="points")) +
+  
   theme(axis.text.y=element_text(size=10,colour="black")) +
   theme(axis.text.x=element_text(size=10,colour="black")) +
   theme(axis.title.x=element_text(size=12,colour="black")) + 
   
-  theme(legend.text=element_text(size=18,colour="black")) + 
-  theme(legend.title=element_text(size=18,colour="black")) + 
+  theme(legend.text=element_text(size=15,colour="black")) + 
+  theme(legend.title=element_text(size=15,colour="black")) + 
   
   ggtitle(paste0("β1 = ",round(results_RH_CT_2020[2,5],2),
           " [",round(results_RH_CT_2020[2,7],2),
@@ -663,7 +675,7 @@ plot_results_RAS_MP_2020=ggplot(RAS_MP_data16S_2020,
   geom_point(shape=21, size=2) +
   geom_smooth(method="lm", alpha=0.5) +
   ylab(NULL) +
-  xlab("2020: BS MP-responder") +
+  xlab("2020: BS MP-responders") +
   theme_bw() +
   scale_fill_brewer(palette="Set3", name="Fertilization: ") +
   
@@ -672,12 +684,14 @@ plot_results_RAS_MP_2020=ggplot(RAS_MP_data16S_2020,
   
   theme(strip.background=element_rect(fill="white",colour="black")) +
   
+  theme(plot.margin=margin(r=20, unit="points")) +
+  
   theme(axis.text.y=element_text(size=10,colour="black")) +
   theme(axis.text.x=element_text(size=10,colour="black")) +
   theme(axis.title.x=element_text(size=12,colour="black")) + 
   
-  theme(legend.text=element_text(size=18,colour="black")) + 
-  theme(legend.title=element_text(size=18,colour="black")) + 
+  theme(legend.text=element_text(size=15,colour="black")) + 
+  theme(legend.title=element_text(size=15,colour="black")) + 
   
   ggtitle(paste0("β1 = ",round(results_RAS_MP_2020[2,5],2),
           " [",round(results_RAS_MP_2020[2,7],2),
@@ -690,7 +704,7 @@ plot_results_RH_MP_2020=ggplot(RH_MP_data16S_2020,
   geom_point(shape=21, size=2) +
   geom_smooth(method="lm", alpha=0.5) +
   ylab(NULL) +
-  xlab("2020: RH MP-responder") +
+  xlab("2020: RH MP-responders") +
   theme_bw() +
   scale_fill_brewer(palette="Set3", name="Fertilization: ") +
   
@@ -699,12 +713,14 @@ plot_results_RH_MP_2020=ggplot(RH_MP_data16S_2020,
   
   theme(strip.background=element_rect(fill="white", colour="black")) +
   
+  theme(plot.margin=margin(r=20, unit="points")) +
+  
   theme(axis.text.y=element_text(size=10,colour="black")) +
   theme(axis.text.x=element_text(size=10,colour="black")) +
   theme(axis.title.x=element_text(size=12,colour="black")) + 
   
-  theme(legend.text=element_text(size=18,colour="black")) + 
-  theme(legend.title=element_text(size=18,colour="black")) + 
+  theme(legend.text=element_text(size=15,colour="black")) + 
+  theme(legend.title=element_text(size=15,colour="black")) + 
   
   ggtitle(paste0("β1 = ",round(results_RH_MP_2020[2,5],2),
           " [",round(results_RH_MP_2020[2,7],2),
@@ -718,7 +734,7 @@ plot_results_RAS_CT_2021=ggplot(RAS_CT_data16S_2021,
   geom_point(shape=21, size=2) +
   geom_smooth(method="lm", alpha=0.5) +
   ylab(NULL) +
-  xlab("2021: BS CT-responder") +
+  xlab("2021: BS CT-responders") +
   theme_bw() +
   scale_fill_brewer(palette="Set3", name="Fertilization: ") +
   
@@ -726,13 +742,15 @@ plot_results_RAS_CT_2021=ggplot(RAS_CT_data16S_2021,
   theme(plot.title=element_markdown()) +
   
   theme(strip.background=element_rect(fill="white",colour="black")) +
+
+  theme(plot.margin=margin(r=20, unit="points")) +
   
   theme(axis.text.y=element_text(size=10,colour="black")) +
   theme(axis.text.x=element_text(size=10,colour="black")) +
   theme(axis.title.x=element_text(size=12,colour="black")) + 
   
-  theme(legend.text=element_text(size=18,colour="black")) + 
-  theme(legend.title=element_text(size=18,colour="black")) + 
+  theme(legend.text=element_text(size=15,colour="black")) + 
+  theme(legend.title=element_text(size=15,colour="black")) + 
   
   ggtitle(paste0("β1 = ",round(results_RAS_CT_2021[2,5],2),
           " [",round(results_RAS_CT_2021[2,7],2),
@@ -744,7 +762,7 @@ plot_results_RH_CT_2021=ggplot(RH_CT_data16S_2021,
   geom_point(shape=21, size=2) +
   geom_smooth(method="lm", alpha=0.5) +
   ylab(NULL) +
-  xlab("2021: RH CT-responder") +
+  xlab("2021: RH CT-responders") +
   theme_bw() +
   scale_fill_brewer(palette="Set3", name="Fertilization: ") +
   
@@ -753,12 +771,14 @@ plot_results_RH_CT_2021=ggplot(RH_CT_data16S_2021,
   
   theme(strip.background=element_rect(fill="white",colour="black")) +
   
+  theme(plot.margin=margin(r=20, unit="points")) +
+  
   theme(axis.text.y=element_text(size=10,colour="black")) +
   theme(axis.text.x=element_text(size=10,colour="black")) +
   theme(axis.title.x=element_text(size=12,colour="black")) + 
   
-  theme(legend.text=element_text(size=18,colour="black")) + 
-  theme(legend.title=element_text(size=18,colour="black")) + 
+  theme(legend.text=element_text(size=15,colour="black")) + 
+  theme(legend.title=element_text(size=15,colour="black")) + 
   
   ggtitle(paste0("β1 = ",round(results_RH_CT_2021[2,5],2),
           " [",round(results_RH_CT_2021[2,7],2),
@@ -770,7 +790,7 @@ plot_results_RAS_MP_2021=ggplot(RAS_MP_data16S_2021,
   geom_point(shape=21, size=2) +
   geom_smooth(method="lm", alpha=0.5) +
   ylab(NULL) +
-  xlab("2021: BS MP-responder") +
+  xlab("2021: BS MP-responders") +
   theme_bw() +
   scale_fill_brewer(palette="Set3", name="Fertilization: ") +
   
@@ -779,12 +799,14 @@ plot_results_RAS_MP_2021=ggplot(RAS_MP_data16S_2021,
   
   theme(strip.background=element_rect(fill="white",colour="black")) +
   
+  theme(plot.margin=margin(r=20, unit="points")) +
+  
   theme(axis.text.y=element_text(size=10,colour="black")) +
   theme(axis.text.x=element_text(size=10,colour="black")) +
   theme(axis.title.x=element_text(size=12,colour="black")) + 
   
-  theme(legend.text=element_text(size=18,colour="black")) + 
-  theme(legend.title=element_text(size=18,colour="black")) + 
+  theme(legend.text=element_text(size=15,colour="black")) + 
+  theme(legend.title=element_text(size=15,colour="black")) + 
   
   ggtitle(paste0("β1 = ",round(results_RAS_MP_2021[2,5],2),
           " [",round(results_RAS_MP_2021[2,7],2),
@@ -796,7 +818,7 @@ plot_results_RH_MP_2021=ggplot(RH_MP_data16S_2021,
   geom_point(shape=21, size=2) +
   geom_smooth(method="lm", alpha=0.5) +
   ylab(NULL) +
-  xlab("2021: RH MP-responder") +
+  xlab("2021: RH MP-responders") +
   theme_bw() +
   scale_fill_brewer(palette="Set3", name="Fertilization: ") +
   
@@ -805,12 +827,14 @@ plot_results_RH_MP_2021=ggplot(RH_MP_data16S_2021,
   
   theme(strip.background=element_rect(fill="white", colour="black")) +
   
+  theme(plot.margin=margin(r=20, unit="points")) +
+  
   theme(axis.text.y=element_text(size=10,colour="black")) +
   theme(axis.text.x=element_text(size=10,colour="black")) +
   theme(axis.title.x=element_text(size=12,colour="black")) + 
   
-  theme(legend.text=element_text(size=18,colour="black")) + 
-  theme(legend.title=element_text(size=18,colour="black")) + 
+  theme(legend.text=element_text(size=15,colour="black")) + 
+  theme(legend.title=element_text(size=15,colour="black")) + 
   
   ggtitle(paste0("β1 = ",round(results_RH_MP_2021[2,5],2),
           " [",round(results_RH_MP_2021[2,7],2),
@@ -818,31 +842,30 @@ plot_results_RH_MP_2021=ggplot(RH_MP_data16S_2021,
           "], *p* < 0.0001")) 
 # End Year 2021
 ```
-##############################################################
-##Can you make the plot somehow 3 x 4, instead 6 x please?##
-###########################################################
+
 Combine all plots together
 ```{r}
-# *p* < 0.0001 muss in den Header 
 empty_space <- ggplot() + theme_void()
 
 plots <- ggarrange(
     plot_results_RAS_CT_2019, 
     plot_results_RAS_CT_2020, 
     plot_results_RAS_CT_2021, 
+    empty_space, empty_space, empty_space,
     plot_results_RH_CT_2019, 
     plot_results_RH_CT_2020, 
     plot_results_RH_CT_2021, 
-    empty_space, empty_space, empty_space, empty_space, empty_space, empty_space,
+    empty_space, empty_space, empty_space,
     plot_results_RAS_MP_2019,
     plot_results_RAS_MP_2020,
     plot_results_RAS_MP_2021,
+    empty_space, empty_space, empty_space,
     plot_results_RH_MP_2019,
     plot_results_RH_MP_2020,
     plot_results_RH_MP_2021,
-    empty_space, empty_space, empty_space, empty_space, empty_space, empty_space,
-    ncol=6,
-    nrow=4,
+    empty_space, empty_space, empty_space, 
+    ncol=3,
+    nrow=8,
     common.legend=TRUE,
     legend = "top",
     heights = c(0.8, 0.05, 0.8, 0.05) 
@@ -850,14 +873,14 @@ plots <- ggarrange(
 
 plots_annotated=annotate_figure(plots,
                       bottom=text_grob("Cumulative RA%", color="black", size=14,vjust=-0.5),
-                      left=text_grob("SOM[%]",color="black", size = 14, rot=90, vjust=1)
+                      left=text_grob("SOM (%)",color="black", size=14, rot=90, vjust=1)
                       )
 
 
 ```
 ```{r}
-png(filename = "Fig3_LinearRegression_revised.png", height = 2500,
-    width = 6000, res=300)
+png(filename = "Fig3_LinearRegression_revised.png", height = 3750,
+    width = 3000, res=300)
 print(plots_annotated)
 dev.off()
 ```
