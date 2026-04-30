@@ -51,10 +51,9 @@ plot_with_gap(ax2, df_soil_grouped_reset, 'OM[%]', treatments, palette[:4])
 ax2.set_xlabel('')  
 ax2.set_ylabel('SOM (%)',  fontsize=13)
 
-#fig.suptitle('Trend Analysis of SOM and N\n(Baseline: 2009, Analysis Period: 2019—2021)', fontsize=14, y=0.95)
-fig.suptitle('Trend Analysis of SOM and N', fontsize=14, y=0.95)
-fig.text(0.5, 0.91, '(Baseline: 2009; Analysis Period: 2019 — 2021)', ha='center', va='center', fontsize=11)
-fig.text(0.5, 0.03, 'Experimental Year', ha='center', va='center', fontsize=13)
+fig.suptitle('Trend analysis of SOM and N', fontsize=14, y=0.95)
+fig.text(0.5, 0.91, '(Baseline: 2009; Analysis period: 2019 — 2021)', ha='center', va='center', fontsize=11)
+fig.text(0.5, 0.03, 'Experimental year', ha='center', va='center', fontsize=13)
 
 plt.subplots_adjust(hspace=0.2, top=0.88, bottom=0.12, right=0.8)
 
