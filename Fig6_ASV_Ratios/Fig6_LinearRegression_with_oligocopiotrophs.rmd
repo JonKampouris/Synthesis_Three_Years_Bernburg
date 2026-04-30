@@ -69,7 +69,7 @@ distributionplot= ggplot(GRfiles,aes(x=log10(.))) +
   theme_bw() + 
   geom_density(alpha=0.5, fill="skyblue4") +
   ylab("Density") +
-  xlab("Log10 mean mDbTs (hours) for all ASVs mapped to different genomes") +
+  xlab("Log10 mean pmDT (hours) for all ASVs mapped to different genomes") +
   
   theme(strip.background=element_rect(fill="white",colour="black")) +
   theme(strip.text=element_text(size=25,colour="black")) +
@@ -505,8 +505,9 @@ ggplot(RAS_RH_Ratio_data16S2,
   theme_bw() +
   xlab("SOM") +
   ylab("RA ratio: ASV high/low pred. aptitude for carb. metabolism") +
-  theme(strip.background=element_rect(fill="white",colour="white")) +
+  theme(strip.background=element_rect(fill="white",colour="black")) +
   theme(strip.text=element_text(size=25,colour="black",angle = 0)) +
+  theme(strip.text.y=element_text(angle=0, hjust=0)) +
   
   theme(axis.text.x=element_text(size=25,colour="black")) +
   theme(axis.title.x=element_text(size=25,colour="black")) +
@@ -516,9 +517,11 @@ ggplot(RAS_RH_Ratio_data16S2,
   theme(legend.position="right",
         axis.text.y=element_text(size=25,colour="black"),
         axis.title.y=element_text(size=25,colour="black")) + 
-  theme(legend.key.size=unit(2,"cm")) +stat_cor(method = "spearman", aes(colour = Tillage),size=7.5, cor.coef.name="ρ")+
-  scale_color_brewer(palette = "Dark2", name="")+
+  theme(legend.key.size=unit(2,"cm")) +
+  stat_cor(method = "spearman", aes(colour = Tillage),size=7.5, cor.coef.name="ρ") +
+  scale_color_brewer(palette = "Dark2", name="") +
   facet_wrap(~Soil_Type, strip.position = "right", nrow=2)
+
 plots3=ggarrange(plotdiff,plotcor, common.legend = T, nrow= 1, legend = "right", labels = c("A)","B)"),font.label = list(size=20))
 ```
 
@@ -540,7 +543,7 @@ distributionplot1= ggplot(GRfiles,aes(x=log10(.))) +
   theme_bw() + 
   geom_density(alpha=0.5, fill="skyblue4") +
   ylab("Density") +
-  xlab("Log10 mean mDbTs (hours) for all ASVs based on the mapping to closely related genomes") +
+  xlab("Log10 mean pmDT (hours) for all ASVs based on the mapping to closely related genomes") +
   
   theme(strip.background=element_rect(fill="white",colour="black")) +
   theme(strip.text=element_text(size=25,colour="black")) +
@@ -560,7 +563,7 @@ distributionplot2= ggplot(GSfiles,aes(x=log10(Genome_Size))) +
   theme_bw() + 
   geom_density(alpha=0.5, fill="skyblue4") +
   ylab("Density") +
-  xlab("Pred. Genome size (log10 bp) for all ASVs based to the mapping on closely related genomes") +
+  xlab("Log10 genome size (bp) for all ASVs based to the mapping on closely related genomes") +
   
   theme(strip.background=element_rect(fill="white",colour="black")) +
   theme(strip.text=element_text(size=25,colour="black")) +
@@ -581,7 +584,7 @@ distributionplot3= ggplot(Cazyfiles,aes(x=log10(CazymeGenes+1))) +
   theme_bw() + 
   geom_density(alpha=0.5, fill="skyblue4") +
   ylab("Density") +
-  xlab("log10 Number of pred. average. CAZyme genes for all ASVs based on the mapping to closely related genomes") +
+  xlab("Log10 (CAZyme genes/genome) for all ASVs based on the mapping to closely related genomes") +
   
   theme(strip.background=element_rect(fill="white",colour="black")) +
   theme(strip.text=element_text(size=25,colour="black")) +
