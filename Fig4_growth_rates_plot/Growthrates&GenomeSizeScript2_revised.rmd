@@ -24,7 +24,7 @@ The script follows the analysis for the genome growth rates.
 Because the genome files can not be reuploaded I need to break the scripts
 in two. Thus, in case anyone needs to re-run, you need to load this file 
 ```{r}
-GRfiles=read.csv(file.path("../OutputData", "Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv"), check.names=F)
+GRfiles=read.csv(file.path("../OutputData", "TableS5_Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv"), check.names=F)
 
 GRfiles= dcast(Soil_Type+till2+Genome+Year~.,  value.var = "DoublingTime", mean, data=GRfiles)%>%
   select(DoublingTime=".", everything())
@@ -71,7 +71,7 @@ plot1 = ggplot(GRfilesC,
 Create the second plot
 ```{r}
 sizegenome=read.csv(file.path(
-"../OutputData", "Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv"),
+"../OutputData", "TableS5_Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv"),
 check.names=F)
 
 ```
@@ -118,7 +118,7 @@ plot2 = ggplot(GSfilesC,
 
 ```{r}
 cazygenes= read.csv(file.path(
-"../OutputData", "Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv"),
+"../OutputData", "TableS5_Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv"),
 check.names=F)
 
 

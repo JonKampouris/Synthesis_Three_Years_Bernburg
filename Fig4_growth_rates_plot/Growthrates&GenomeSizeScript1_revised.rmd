@@ -297,7 +297,7 @@ genome_size$Genome_Size2=genome_size$Genome_Size+
 matches3B=full_join(results2cazy, matches3)
 matches3C=full_join(genome_size, matches3B)
 
-write.csv(file =   "../OutputData/TableS5_All_ASVs_Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv",
+write.csv(file =   "../OutputData/All_ASVs_Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv",
           matches3C%>%select(ASV=V1, everything()))
 
 matches5=full_join( all_models_dif, 
@@ -316,7 +316,7 @@ in GitHub.
 
 ```{r}
 write.csv(file = 
-    "../OutputData/Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv",
+    "../OutputData/TableS5_Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv",
           matches5)
 
 ```
