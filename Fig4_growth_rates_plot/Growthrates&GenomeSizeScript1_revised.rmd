@@ -233,6 +233,7 @@ results2cazy=do.call("rbind",resultscazy)%>%
 sep="_prokka")%>%
   mutate(genome=str_replace(Genome,"_G.*", ""))%>%
     select(genome, CazymeGenes)
+
 ```
 Run this code to gather the genomes first in a SLURM system
 
@@ -295,6 +296,10 @@ genome_size$Genome_Size2=genome_size$Genome_Size+
 
 matches3B=full_join(results2cazy, matches3)
 matches3C=full_join(genome_size, matches3B)
+
+write.csv( 
+    "../OutputData/All_ASVs_Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv",
+          matches3C)
 
 matches5=full_join( all_models_dif, 
 select(matches3C, ASV=V1, everything()))

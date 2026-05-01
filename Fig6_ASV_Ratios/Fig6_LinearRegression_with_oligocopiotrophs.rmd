@@ -375,34 +375,8 @@ dev.off()
 ```
 
 ````{r}
-path="../../all_dbcan_files"
-list1=list.files(path, pattern="*txt", recursive = TRUE)
-all_dbcans=function(x) {
-path_to_genome <- paste0(path, "/",list1[x])
-#if (file.info(path_to_genome)$size>0){ works only in linux
-if ( !is.na (file.info(path_to_genome)$size)&& file.info(path_to_genome)$size > 0){ #works  in windows
-
-file1=read.delim(path_to_genome, header = F)
-file2=data.frame(G1=paste0(list1[x]), CazymeGenes=nrow(file1))}else{
-  file2=data.frame(G1=paste0(list1[x]), CazymeGenes=0)
-}
-return(file2)
-}
-
-resultscazy <- lapply( 1:length(list1), 
-                         function(x) all_dbcans(x))
-
-results2cazy=do.call("rbind",resultscazy)%>%
-  separate(., col=G1, into=c("Genome","PR"),
-sep="_prokka")%>%
-  mutate(genome=str_replace(Genome,"_G.*", ""))%>%
-    select(genome, CazymeGenes)
-
-results2cazy$genome=gsub("*.*GC","GC",results2cazy$genome
-)
-matches_cazy=full_join(results2cazy, matches)%>%
-  filter(CazymeGenes!="NA")
-Cazyfiles=dcast(matches_cazy,V1~.,value.var = "CazymeGenes", mean)%>%
+matches_cazy=read.csv("../OutputData/TableS4_Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv")
+Cazyfiles=dcast(matches_cazy,ASV~.,value.var = "CazymeGenes", mean)%>%
   select(ASV=V1,CazymeGenes=".")
 
 
