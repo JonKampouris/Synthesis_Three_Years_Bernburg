@@ -144,7 +144,7 @@ for(i in unique(paste0(nutrients4$Nutrient))){
   # Add p_value for the model with Experimental_Year as fixed effect
   file2_fixed=lm(Variable~TILLAGE2*FERTILIZATION2*Experimental_Year, data=file1)
   print(file2_fixed)
-    filename1= paste0("../FigS3_QQPlot", "/QQ_Plots_",gsub(" .%.","",i),".png")
+    filename1= paste0("../FigS1_QQPlot", "/QQ_Plots_",gsub(" .%.","",i),".png")
     png(filename1, width = 1200, height = 600)
     
       qqnorm(resid(file2_fixed), main=paste("Normal Q-Q Plot for",i))

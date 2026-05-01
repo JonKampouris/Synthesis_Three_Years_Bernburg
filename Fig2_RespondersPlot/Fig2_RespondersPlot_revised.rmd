@@ -236,8 +236,8 @@ plot_2021 <- ggarrange(plot_pos_2021, plot_neg_2021, ncol=2, labels=c("MP-respon
 
 plotVenn <- ggarrange(plot_2019, plot_2020, plot_2021, nrow=3, labels=c("2019", "2020", "2021"), font.label=list(size=16, face="bold"))
 
-dir.create(file.path("../FigS4_VennDiagrams"), showWarnings = FALSE)
-png(filename = file.path("../FigS4_VennDiagrams", "FigS4_VennDiagrams.png"), height=3000, width=2750, res=300)
+dir.create(file.path("../FigS6_VennDiagrams"), showWarnings = FALSE)
+png(filename = file.path("../FigS6_VennDiagrams", "FigS6_VennDiagrams.png"), height=3000, width=2750, res=300)
 print(plotVenn) 
 dev.off()
 
@@ -292,9 +292,9 @@ plots_common=ggarrange(plot_pos_BS,plot_pos_RH,
 ```
 
 ```{r}
-dir.create(file.path("../FigS5_VennDiagrams"), showWarnings = FALSE)
+dir.create(file.path("../FigS7_VennDiagrams"), showWarnings = FALSE)
 
-png(filename = "../FigS5_VennDiagrams/SI_Venns_common_in_three_years.png", height = 3000, width = 4000, res=300)
+png(filename = "../FigS7_VennDiagrams/SI_Venns_common_in_three_years.png", height = 3000, width = 4000, res=300)
 print(plots_common) 
 dev.off()
 ```
@@ -376,9 +376,9 @@ p1=ggplot(perm_list,aes(x=paste(Soil_Type, Year), y=Variable, fill=100*R2))+
 
 
 ```{r}
-dir.create(file.path("../FigS6_permanovaplots"), showWarnings = FALSE)
+dir.create(file.path("../FigS5_permanovaplots"), showWarnings = FALSE)
 
-png(filename = "../FigS6_permanovaplots/PERMANOVA_PLOTS_full_community_and_Dominant_fraction_in_three_years.png", height = 4000, width = 4000, res=300)
+png(filename = "../FigS5_permanovaplots/PERMANOVA_PLOTS_full_community_and_Dominant_fraction_in_three_years.png", height = 4000, width = 4000, res=300)
 print(p1) 
 dev.off()
 ```

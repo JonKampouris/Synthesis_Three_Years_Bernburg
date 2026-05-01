@@ -578,9 +578,9 @@ plots4=ggarrange(distributionplot1,distributionplot2,distributionplot3, labels =
 
 ```{r}
 
-dir.create(file.path("../FigS7_Distribution_Plots_ASV_Ratios"), showWarnings = FALSE)
-png(filename = file.path("../FigS7_Distribution_Plots_ASV_Ratios",
-                         "FigS7_Distribution_Plots_ASV_Ratios.png"),
+dir.create(file.path("../FigS4_Distribution_Plots_ASV_Ratios"), showWarnings = FALSE)
+png(filename = file.path("../FigS4_Distribution_Plots_ASV_Ratios",
+                         "FigS4_Distribution_Plots_ASV_Ratios.png"),
       height = 3000,
       width = 5000, 
       res=250
