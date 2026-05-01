@@ -166,7 +166,7 @@ ggplot(RAS_RH_Ratio_data16S3,
 aes(y=Ratio+0.5, label=L1), size=9, position = position_dodge(width = 1)) +
 theme(legend.position = "right")+facet_wrap(~equal)
 
-
+RAS_RH_Ratio_data16S_pmDTs=RAS_RH_Ratio_data16S3
 ```
 
 ```{r}
@@ -375,10 +375,9 @@ dev.off()
 ```
 
 ````{r}
-matches_cazy=read.csv("../OutputData/TableS4_Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv")
+matches_cazy=read.csv("../OutputData/All_ASVs_Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv")
 Cazyfiles=dcast(matches_cazy,ASV~.,value.var = "CazymeGenes", mean)%>%
-  select(ASV=V1,CazymeGenes=".")
-
+  select(ASV,CazymeGenes=".")
 
 ````
 
@@ -591,8 +590,47 @@ dev.off()
 ```
 
 
+```{r}
+unimodal1= ggplot(RAS_RH_Ratio_data16S_pmDTs, 
+  aes(x=OM, y=log10(Ratio))) +
+  geom_point(shape=21, size=2) +
+  geom_smooth(method = "lm")+
+  geom_smooth(method = "lm", formula = y~poly(x,2))+
+
+    scale_fill_brewer(name="",palette = "Dark2") +
+  theme_bw() +
+  xlab("SOM") +
+  ylab("RA ratio: ASV high/low pred. aptitude for carb. metabolism") +
+  theme(strip.background=element_rect(fill="white",colour="black")) +
+  theme(strip.text=element_text(size=25,colour="black",angle = 0)) +
+  theme(strip.text.y=element_text(angle=0, hjust=0)) +
+  
+  theme(axis.text.x=element_text(size=25,colour="black")) +
+  theme(axis.title.x=element_text(size=25,colour="black")) +
+  
+  theme(legend.text=element_text(size=25,colour="black")) + 
+  theme(legend.title=element_text(size=25,colour="black")) + 
+  theme(legend.position="right",
+        axis.text.y=element_text(size=25,colour="black"),
+        axis.title.y=element_text(size=25,colour="black")) + 
+  theme(legend.key.size=unit(2,"cm")) +
+  scale_color_brewer(palette = "Dark2", name="") +
+  facet_wrap(~Soil_Type, strip.position = "right", nrow=2)+stat_cor(method = "spearman")
+lm1=lm(log10(Ratio)~OM,RAS_RH_Ratio_data16S_pmDTs%>%filter(Soil_Type=="BS"))
+lm2=lm(log10(Ratio)~poly(OM,2),RAS_RH_Ratio_data16S_pmDTs%>%filter(Soil_Type=="BS"))
+
+dir.create(file.path("../FigS8_unimodal"), showWarnings = FALSE)
+png(filename = file.path("../FigS8_unimodal",
+                         "FigS8_unimodal.png"),
+      height = 3000,
+      width = 4000, 
+      res=250
+    )
+print(plots2)
+dev.off()
 
 
+```
 
 ````{r}
 print("The full End!!")
