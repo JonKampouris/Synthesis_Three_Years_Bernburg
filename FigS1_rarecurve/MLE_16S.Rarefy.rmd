@@ -67,7 +67,7 @@ quickRareCurve <- function (x, step=1, sample, xlab="Sample Size",
   # parallel mclapply
   # set number of cores
   mc <- getOption("mc.cores", ifelse(max.cores, detectCores(), nCores))
-  out <- mclapply(seq_len(nr), mc.cores=1, function(i) {
+  out <- mclapply(seq_len(nr), mc.cores=mc, function(i) {
     n <- seq(1, tot[i], by = step)
     if (n[length(n)] != tot[i])
       n <- c(n, tot[i])
