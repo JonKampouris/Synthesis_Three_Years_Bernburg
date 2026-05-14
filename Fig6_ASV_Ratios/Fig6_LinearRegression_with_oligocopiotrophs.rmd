@@ -117,8 +117,8 @@ RAS_RH_Ratio_data16S2=dcast(RAS_RH_Ratio_data16S,
 OM+Sample+Tillage+Fertilization+Year+Soil_Type~Trait,
 value.var = "RA",sum)
 
-RAS_RH_Ratio_data16S2$Ratio=((
-RAS_RH_Ratio_data16S2$fast_grower+1)/(RAS_RH_Ratio_data16S2$slow_grower+1))
+RAS_RH_Ratio_data16S2$Ratio=
+    ((RAS_RH_Ratio_data16S2$slow_grower+1)/(RAS_RH_Ratio_data16S2$fast_grower+1))
 RAS_RH_Ratio_data16S2$Soil_Type[RAS_RH_Ratio_data16S2$Soil_Type=="RAS"]="BS"
 ```
 Ratios
@@ -149,7 +149,7 @@ ggplot(RAS_RH_Ratio_data16S3,
   scale_fill_brewer(name="",palette = "Dark2") +
   theme_bw() +
   xlab("") +
-  ylab("RA ratio of pred. fast/slow-growing bacterial ASVs") +
+  ylab("RA ratio of pred. slow/fast-growing bacterial ASVs") +
   theme(strip.background=element_rect(fill="white",colour="white")) +
   theme(strip.text=element_text(size=25,colour="black",angle = 0)) +
   
@@ -188,7 +188,7 @@ ggplot(RAS_RH_Ratio_data16S2,
   scale_fill_brewer(name="",palette="Dark2") +
   theme_bw() +
   xlab("SOM (%)") +
-  ylab("RA ratio of pred. fast/slow-growing bacterial ASVs") +
+  ylab("RA ratio of pred. slow/fast-growing bacterial ASVs") +
   theme(strip.background=element_rect(fill="white",colour="black")) +
   theme(strip.text=element_text(size=25,colour="black",angle=0)) +
   theme(strip.text.y=element_text(angle=0, hjust=0)) +
@@ -279,8 +279,8 @@ RAS_RH_Ratio_data16S2=dcast(RAS_RH_Ratio_data16S,
 OM+Sample+Tillage+Fertilization+Year+Soil_Type~Trait,
 value.var = "RA",sum)
 
-RAS_RH_Ratio_data16S2$Ratio=((
-RAS_RH_Ratio_data16S2$Above_Median_Genome_size+1)/(RAS_RH_Ratio_data16S2$Below_Median_Genome_size+1))
+RAS_RH_Ratio_data16S2$Ratio=(
+  ((RAS_RH_Ratio_data16S2$Below_Median_Genome_size+1)/RAS_RH_Ratio_data16S2$Above_Median_Genome_size+1))
 RAS_RH_Ratio_data16S2$Soil_Type[RAS_RH_Ratio_data16S2$Soil_Type=="RAS"]="BS"
 ```
 Ratios
@@ -311,7 +311,7 @@ ggplot(RAS_RH_Ratio_data16S3,
   scale_fill_brewer(name="",palette = "Dark2") +
   theme_bw() +
   xlab("") +
-  ylab("RA ratio: ASVs with above/below average pred. genome sizes") +
+  ylab("RA ratio: ASVs with below/above average pred. genome sizes") +
   theme(strip.background=element_rect(fill="white",colour="white")) +
   theme(strip.text=element_text(size=25,colour="black",angle = 0)) +
   
@@ -340,7 +340,7 @@ ggplot(RAS_RH_Ratio_data16S2,
   scale_fill_brewer(name="",palette="Dark2") +
   theme_bw() +
   xlab("SOM (%)") +
-  ylab("RA ratio: ASVs with above/below average pred. genome sizes") +
+  ylab("RA ratio: ASVs with below/above average pred. genome sizes") +
   theme(strip.background=element_rect(fill="white",colour="black")) +
   theme(strip.text=element_text(size=25,colour="black",angle = 0)) +
   theme(strip.text.y=element_text(angle=0, hjust=0)) +
@@ -417,7 +417,7 @@ OM+Sample+Tillage+Fertilization+Year+Soil_Type~Trait,
 value.var = "RA",sum)
 
 RAS_RH_Ratio_data16S2$Ratio=((
-RAS_RH_Ratio_data16S2$Above_Median_Cazy_Genes+1)/(RAS_RH_Ratio_data16S2$Below_Median_Cazy_Genes+1))
+(RAS_RH_Ratio_data16S2$Below_Median_Cazy_Genes+1)/RAS_RH_Ratio_data16S2$Above_Median_Cazy_Genes+1))
 RAS_RH_Ratio_data16S2$Soil_Type[RAS_RH_Ratio_data16S2$Soil_Type=="RAS"]="BS"
 ```
 Ratios
@@ -448,7 +448,7 @@ ggplot(RAS_RH_Ratio_data16S3,
   scale_fill_brewer(name="",palette = "Dark2") +
   theme_bw() +
   xlab("") +
-  ylab("RA ratio: ASV high/low pred. aptitude for carb. metabolism") +
+  ylab("RA ratio: ASV low/high pred. aptitude for carb. metabolism") +
   theme(strip.background=element_rect(fill="white",colour="white")) +
   theme(strip.text=element_text(size=25,colour="black",angle = 0)) +
   
@@ -477,7 +477,7 @@ ggplot(RAS_RH_Ratio_data16S2,
   scale_fill_brewer(name="",palette = "Dark2") +
   theme_bw() +
   xlab("SOM (%)") +
-  ylab("RA ratio: ASV high/low pred. aptitude for carb. metabolism") +
+  ylab("RA ratio: ASV low/high pred. aptitude for carb. metabolism") +
   theme(strip.background=element_rect(fill="white",colour="black")) +
   theme(strip.text=element_text(size=25,colour="black",angle = 0)) +
   theme(strip.text.y=element_text(angle=0, hjust=0)) +
@@ -600,7 +600,7 @@ unimodal1= ggplot(RAS_RH_Ratio_data16S_pmDTs,
     scale_fill_brewer(name="",palette = "Dark2") +
   theme_bw() +
   xlab("SOM (%)") +
-  ylab("RA ratio: ASV high/low pred. aptitude for carb. metabolism") +
+  ylab("RA ratio: ASV low/high pred. aptitude for carb. metabolism") +
   theme(strip.background=element_rect(fill="white",colour="black")) +
   theme(strip.text=element_text(size=25,colour="black",angle = 0)) +
   theme(strip.text.y=element_text(angle=0, hjust=0)) +
