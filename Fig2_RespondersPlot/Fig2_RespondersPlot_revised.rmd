@@ -179,7 +179,7 @@ plot_neg_2019 <- ggvenn(data_neg_2019,
   c("BS", "RH"),set_name_size=4,text_size=4) +
   theme(plot.margin = unit(c(1, 1, 1, 1), "cm"))
 
-plot_2019 <- ggarrange(plot_pos_2019, plot_neg_2019, ncol=2, labels=c("MP-responders (positive)", "CT-responders (negative)"), font.label=list(size=14, face="bold"))
+plot_2019 <- ggarrange(plot_pos_2019, plot_neg_2019, ncol=2, labels=c("Positive MP-responders", "Positive CT-responders"), font.label=list(size=14, face="bold"))
 
 # Year 2020
 BS_pos_resp_2020 <- comparison_list2 %>% filter(Soil_Type == "BS", coeff > 0, Year==2020)
@@ -205,7 +205,7 @@ plot_neg_2020 <- ggvenn(data_neg_2020,
   c("BS", "RH"),set_name_size=4,text_size=4) +
   theme(plot.margin = unit(c(1, 1, 1, 1), "cm"))
 
-plot_2020 <- ggarrange(plot_pos_2020, plot_neg_2020, ncol=2, labels=c("MP-responders (positive)", "CT-responders (negative)"), font.label=list(size=14, face="bold"))
+plot_2020 <- ggarrange(plot_pos_2020, plot_neg_2020, ncol=2, labels=c("Positive MP-responders", "Positive CT-responders"), font.label=list(size=14, face="bold"))
 
 # Year 2021
 BS_pos_resp_2021 <- comparison_list2 %>% filter(Soil_Type == "BS", coeff > 0, Year==2021)
@@ -232,7 +232,7 @@ plot_neg_2021 <- ggvenn(data_neg_2021,
   c("BS", "RH"),set_name_size=4,text_size=4) +
   theme(plot.margin = unit(c(1, 1, 1, 1), "cm"))
 
-plot_2021 <- ggarrange(plot_pos_2021, plot_neg_2021, ncol=2, labels=c("MP-responders (positive)", "CT-responders (negative)"), font.label=list(size=14, face="bold"))
+plot_2021 <- ggarrange(plot_pos_2021, plot_neg_2021, ncol=2, labels=c("Positive MP-responders", "Positive CT-responders"), font.label=list(size=14, face="bold"))
 
 plotVenn <- ggarrange(plot_2019, plot_2020, plot_2021, nrow=3, labels=c("2019", "2020", "2021"), font.label=list(size=16, face="bold"))
 
@@ -284,10 +284,10 @@ plot_neg_RH= ggvenn(data_neg_RH,
 
 
 plots_common=ggarrange(plot_pos_BS,plot_pos_RH,
-  plot_neg_BS,plot_neg_RH, labels = c("MP-responders (positive) BS",
-                                      "MP-responders (positive) RH",
-                                      "CT-responders (negative) BS",
-                                      "CT-responders (negative) RH"))
+  plot_neg_BS,plot_neg_RH, labels = c("Positive MP-responders (BS)",
+                                      "Positive MP-responders (RH)",
+                                      "Positive CT-responders (BS)",
+                                      "Positive CT-responders (RH)"))
 
 ```
 
