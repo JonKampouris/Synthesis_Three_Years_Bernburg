@@ -593,14 +593,14 @@ dev.off()
 ```{r}
 unimodal1= ggplot(RAS_RH_Ratio_data16S_pmDTs, 
   aes(x=OM, y=log10(Ratio))) +
-  geom_point(shape=21, size=2) +
+  geom_point(shape=21, fill="darkgray", size=5) +
   geom_smooth(method = "lm")+
   geom_smooth(method = "lm", formula = y~poly(x,2))+
 
     scale_fill_brewer(name="",palette = "Dark2") +
   theme_bw() +
   xlab("SOM (%)") +
-  ylab("RA ratio: ASV low/high pred. aptitude for carb. metabolism") +
+  ylab("RA ratio of pred. slow/fast-growing bacterial ASVs") +
   theme(strip.background=element_rect(fill="white",colour="black")) +
   theme(strip.text=element_text(size=25,colour="black",angle = 0)) +
   theme(strip.text.y=element_text(angle=0, hjust=0)) +
@@ -627,8 +627,8 @@ anova(lm3,lm4)
 dir.create(file.path("../FigS8_unimodal"), showWarnings = FALSE)
 png(filename = file.path("../FigS8_unimodal",
                          "FigS8_unimodal.png"),
-      height = 3000,
-      width = 4000, 
+      height = 2500,
+      width = 1500, 
       res=250
     )
 print(unimodal1)
