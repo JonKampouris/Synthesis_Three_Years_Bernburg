@@ -59,28 +59,51 @@ nutrients4$Nutrient=gsub("OM\\[%\\]","SOM (%)",
 Dunn's test for Nitrogen and Carbon 
 ```{r}
 Letter_list=list()
-for( i in unique(nutrients4$Nutrient)){
-for( j in unique(nutrients4$Experimental_Year)){
-
-file1=filter(nutrients4, Nutrient==i&Experimental_Year==j)
-dunns= dunn.test::dunn.test(file1$Variable, file1$G, method = "BH")
-comparisons=data.frame(comparisons=dunns$comparisons, p=dunns$P.adjusted)%>%
-  separate(., "comparisons", into = c("row","col"), sep = " - ")
-orderlist= aggregate( file1, Variable~G, mean)
-comparisons=full_join(comparisons, orderlist%>%mutate(row=G), by="row")%>%
-  na.omit()
-comparisons=comparisons[order(comparisons$Variable, decreasing = T),]
-names1=paste0(comparisons$row,"-", comparisons$col)
-p=comparisons$p
-names(p)=names1
-letters=  multcompView::multcompLetters(p,  
-compare = "<", reversed =F)$Letters%>%as.data.frame()
-colnames(letters)="L1"
-letters$G=rownames(letters)
-letters$Experimental_Year=j
-letters$Nutrient=paste0(i)
-Letter_list=rbind(letters, Letter_list)  
-}}
+results_list <- list()
+for(i in unique(nutrients4$Nutrient)){
+  for(j in unique(nutrients4$Experimental_Year)){
+  
+    file1=filter(nutrients4, Nutrient==i & Experimental_Year==j)
+    
+    #dunns=dunn.test::dunn.test(file1$Variable, file1$G, method="BH")
+    anova_result = aov(Variable~G, data=file1)
+    
+    residuals <- residuals(anova_result)
+    shapiro_test <- shapiro.test(residuals)
+    results_list[[paste(i, j, sep = "_")]] <- list(
+      ANOVA = summary(anova_result),
+      Shapiro = shapiro_test
+    )
+    
+    print(paste("Shapiro-Wilk Test for Nutrient:", i, "Year:", j))
+    print(shapiro_test)
+    
+    tukey_result = TukeyHSD(anova_result)
+    #comparisons=data.frame(comparisons=dunns$comparisons, p=dunns$P.adjusted)
+      #%>%separate(., "comparisons", into=c("row","col"), sep=" - ")
+    tukey_comparisons = as.data.frame(tukey_result$G)
+    tukey_comparisons$row = rownames(tukey_comparisons)
+    tukey_comparisons = tukey_comparisons %>%separate(row, into = c("row", "col"), sep = "-") 
+        %>%select(row, col, `p adj`)
+    
+    #orderlist=aggregate(file1, Variable~G, mean)
+    orderlist = aggregate(file1$Variable, by = list(file1$G), FUN = mean)
+    colnames(orderlist) = c("G", "Variable")
+    
+    #comparisons=full_join(comparisons, orderlist%>%mutate(row=G), by="row")%>%na.omit()
+    comparisons = full_join(tukey_comparisons, orderlist %>% mutate(row = G), by = "row") %>% na.omit()
+    comparisons=comparisons[order(comparisons$Variable, decreasing = T),]
+    names1=paste0(comparisons$row,"-", comparisons$col)
+    p=comparisons$p
+    names(p)=names1
+    letters=multcompView::multcompLetters(p, compare="<", reversed=F)$Letters%>%as.data.frame()
+    colnames(letters)="L1"
+    letters$G=rownames(letters)
+    letters$Experimental_Year=j
+    letters$Nutrient=paste0(i)
+    Letter_list=rbind(letters, Letter_list)  
+  }
+}
 
 ```
 
@@ -108,7 +131,7 @@ plot1 = ggplot(data=nutrients5,
              aes(x=as.factor(Experimental_Year), y=Variable, fill=paste0(Tillage,"-",Fertilization)), 
              position=position_jitterdodge (jitter.width=0.25,
                                             dodge.width =0.9 ), shape=21,
-             alpha=0.7, size=2) +
+             alpha=0.7, size=4) +
   facet_wrap(~Nutrient, strip.position="left", scales="free", labeller=label_value) +
   scale_alpha_manual(values = c(1, 0.1), name="N. Fert.: ") +
   scale_fill_manual(values = c("#c8e9df","#4ab795", "#fdb79c",  "#fb6328"), name="") +
