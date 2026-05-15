@@ -615,7 +615,7 @@ unimodal1= ggplot(RAS_RH_Ratio_data16S_pmDTs,
         axis.title.y=element_text(size=25,colour="black")) + 
   theme(legend.key.size=unit(2,"cm")) +
   scale_color_brewer(palette = "Dark2", name="") +
-  facet_wrap(~Soil_Type, strip.position = "right", nrow=2)+stat_cor(method = "spearman")
+  facet_wrap(~Soil_Type, strip.position = "right", nrow=2)+stat_cor(method = "spearman",size=7.5, cor.coef.name="ρ" )
 lm1=lm(log10(Ratio)~OM,RAS_RH_Ratio_data16S_pmDTs%>%filter(Soil_Type=="BS"))
 lm2=lm(log10(Ratio)~poly(OM,2),RAS_RH_Ratio_data16S_pmDTs%>%filter(Soil_Type=="BS"))
 anova(lm1,lm2)
