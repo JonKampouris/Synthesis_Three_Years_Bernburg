@@ -46,7 +46,7 @@ matches$codname=gsub(" d_*.*","", matches$V2)
 matches$genome=paste0( gsub("RS_","", gsub("GB_","", matches$codname)))
 write.table(unique( matches$genome), file =  "../OutputData/codenames.txt", 
             row.names = F, quote=F)
-all_models_dif=read.csv("../OutputData/TableS3_RespondersPlot_revised.csv")
+all_models_dif=read.csv("../OutputData/TableS3_RespondersPlot.csv")
 ```
 
 **Download the genomes**

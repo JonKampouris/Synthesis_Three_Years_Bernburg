@@ -126,7 +126,7 @@ plotPhylum= ggplot(comparison_list2, aes(x=log10(100*(Mean)/15349), y=FC, fill=t
   ylab(expression("Log2 FC")) +
   xlab(expression("Mean Log10 RA")) + geom_hline(yintercept = 0, linetype=2)
 
-png(filename = "Fig2_RespondersPhylum_revised.png", height = 6000,
+png(filename = "Fig2_RespondersPhylum.png", height = 6000,
     width = 5500, res=350)
 print(plotPhylum) 
 dev.off()
@@ -143,7 +143,7 @@ comparison_list2=filter(as.data.frame(comparison_list)%>%full_join(Taxonomy), pa
 ```
 
 ````{r}  
-write.csv(file = file.path("../OutputData", "TableS3_RespondersPlot_revised.csv"), comparison_list2)
+write.csv(file = file.path("../OutputData", "TableS3_RespondersPlot.csv"), comparison_list2)
 ````
 
 ````{r}

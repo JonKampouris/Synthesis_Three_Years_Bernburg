@@ -51,7 +51,7 @@ ASVtaxonomy=read.csv(file.path("../InputData", "16SMLERarefied_table.csv"),row.n
   as.data.frame() %>%
   rownames_to_column(var="ASV")
 
-all_models_diff=read.csv(file.path("../OutputData", "TableS3_RespondersPlot_revised.csv"))
+all_models_diff=read.csv(file.path("../OutputData", "TableS3_RespondersPlot.csv"))
 
 bac_rer_number=unique(colSums(ASVtaxonomy[,-1]))
 ```
@@ -879,7 +879,7 @@ plots_annotated=annotate_figure(plots,
 
 ```
 ```{r}
-png(filename = "Fig3_LinearRegression_revised.png", height = 3750,
+png(filename = "Fig3_LinearRegression.png", height = 3750,
     width = 3000, res=300)
 print(plots_annotated)
 dev.off()
