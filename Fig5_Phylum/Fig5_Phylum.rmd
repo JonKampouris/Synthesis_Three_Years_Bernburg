@@ -15,7 +15,7 @@ library(reshape2) # Reshaping the data and infer statistics, Version 1.4.4
 The script follows a further analysis of genome growth rates. 
 Thus, in case anyone needs to re-run, you need to load this file 
 ```{r}
-GRfiles=read.csv(file.path("../OutputData", "Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv"), check.names=F)
+GRfiles=read.csv(file.path("../OutputData", "Resp_Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv"), check.names=F)
 GRfiles= dcast(Soil_Type+till2+tax.Phylum+Genome+Year~.,  value.var = "DoublingTime", mean, data=GRfiles)%>%
   select(DoublingTime=".", everything())
 
@@ -49,7 +49,7 @@ plot1 = ggplot(GRfiles,
 
 Create the second plot
 ```{r}
-GRfiles=read.csv(file.path("../OutputData", "Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv"), check.names=F)
+GRfiles=read.csv(file.path("../OutputData", "Resp_Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv"), check.names=F)
 
 GRfiles$till2=GRfiles$coeff
 GRfiles$till2[GRfiles$till2>0]="MP"
@@ -144,7 +144,7 @@ plot2B = ggplot(GRfilesB,
 
 
 ```{r}
-sizegenome=read.csv(file.path("../OutputData", "Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv")) 
+sizegenome=read.csv(file.path("../OutputData", "Resp_Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv")) 
 ```
 
 ```{r}
@@ -253,7 +253,7 @@ plot4B = ggplot(GSfiles2B,
 ```
 
 ```{r}
-cazygenes= read.csv(file = "../OutputData/Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv")
+cazygenes= read.csv(file = "../OutputData/Resp_Tillage_GMs_Growth_rates_GenomeSize_CazymeGenes.csv")
 ```
 Until this part can not be uploaded in the linux server 
 
@@ -381,8 +381,8 @@ plots=ggarrange(plot2,plot4,plot6,  common.legend = T,
 
 Save plot
 ```{r}
-png(filename = "Fig5_Phylum.png", height = 6000,
-    width = 4500, res=200)
+png(filename = "Fig5_Phylum.png", height = 4500,
+    width = 3000, res=200)
 print(plots)
 dev.off()
 ```
