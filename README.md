@@ -32,5 +32,23 @@ The R code and the plot for Figure 5 can be accessed [`here`](Fig5_Phylum).
 The R code and the plot for Figure 6 can be accessed [`here`](Fig6_ASV_Ratios).
 ### OutputData
 Tables S2-S4 can be accessed [`here`](OutputData). 
-### FigS1_rarecurve
-The R code and the plot for Figure S1 can be accessed [`here`](FigS1_rarecurve).
+### FigS1_QQPlot
+The plot for Figure S1 can be accessed [`here`](FigS1_QQPlot). This plot is generated using the code from Figure 1.
+### FigS2_SoilData
+The python code, the raw data from 2009 and the plot for Figure S2 can be accessed [`here`](FigS2_SoilData).
+### FigS3_rarecurve
+The R code and the plot for Figure S3 can be accessed [`here`](FigS3_rarecurve).
+### FigS4_Distribution_Plots_ASV_Ratios
+The Figure S4 can be accessed [`here`](FigS4_Distribution_Plots_ASV_Ratios). This plot is generated using the code from Figure 6.
+### FigS5_permanovaplots
+The Figure S5 can be accessed [`here`](FigS5_permanovaplots). This plot is generated using the code from Figure 2.
+### FigS6_VennDiagrams
+The Figure S6 can be accessed [`here`](FigS6_VennDiagramms). This plot is generated using the code from Figure 2.
+### FigS7_VennDiagrams
+The Figure S7 can be accessed [`here`](FigS7_VennDiagramms). This plot is generated using the code from Figure 2.
+### FigS8_unimodal
+The Figure S8 can be accessed [`here`](FigS8_unimodal). This plot is generated using the code from Figure 6.
+### FigS9_Genome_size_ASV_Ratios
+The Figure S9 can be accessed [`here`](FigS9_Genome_size_ASV_Ratios). This plot is generated using the code from Figure 6.
+### FigS10_Cazyme_genes_ASV_Ratios
+The Figure S10 can be accessed [`here`](FigS10_Cazyme_genes_ASV_Ratios). This plot is generated using the code from Figure 6.
