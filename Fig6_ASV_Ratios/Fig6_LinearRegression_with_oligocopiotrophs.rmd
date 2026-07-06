@@ -51,7 +51,7 @@ GRfiles$ASV=GRfiles$V1
 GRfiles=dcast(GRfiles,ASV~.,value.var = "DoublingTime", mean)
 ```
 Generate a distribution plot of the growth rates to select the best
-division point for slow and fast growing taxa.
+division point for slower and faster growing taxa.
 ```{r}
 library(RColorBrewer)
 ```
@@ -149,7 +149,7 @@ ggplot(RAS_RH_Ratio_data16S3,
   scale_fill_brewer(name="",palette = "Dark2") +
   theme_bw() +
   xlab("") +
-  ylab("RA ratio of pred. slow/fast-growing bacterial ASVs") +
+  ylab("RA ratio of pred. slower/faster-growing bacterial ASVs") +
   theme(strip.background=element_rect(fill="white",colour="white")) +
   theme(strip.text=element_text(size=25,colour="black",angle = 0)) +
   
@@ -188,7 +188,7 @@ ggplot(RAS_RH_Ratio_data16S2,
   scale_fill_brewer(name="",palette="Dark2") +
   theme_bw() +
   xlab("SOM (%)") +
-  ylab("RA ratio of pred. slow/fast-growing bacterial ASVs") +
+  ylab("RA ratio of pred. slower/faster-growing bacterial ASVs") +
   theme(strip.background=element_rect(fill="white",colour="black")) +
   theme(strip.text=element_text(size=25,colour="black",angle=0)) +
   theme(strip.text.y=element_text(angle=0, hjust=0)) +
