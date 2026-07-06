@@ -600,7 +600,7 @@ unimodal1= ggplot(RAS_RH_Ratio_data16S_pmDTs,
     scale_fill_brewer(name="",palette = "Dark2") +
   theme_bw() +
   xlab("SOM (%)") +
-  ylab("RA ratio of pred. slow/fast-growing bacterial ASVs") +
+  ylab("RA ratio of pred. slower/faster-growing bacterial ASVs") +
   theme(strip.background=element_rect(fill="white",colour="black")) +
   theme(strip.text=element_text(size=25,colour="black",angle = 0)) +
   theme(strip.text.y=element_text(angle=0, hjust=0)) +
