@@ -381,8 +381,8 @@ plots=ggarrange(plot2,plot4,plot6,  common.legend = T,
 
 Save plot
 ```{r}
-png(filename = "Fig5_Phylum.png", height = 4500,
-    width = 3000, res=200)
+png(filename = "Fig5_Phylum.png", height = 6000,
+    width = 3000, res=220)
 print(plots)
 dev.off()
 ```
